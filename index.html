@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Owner Dashboard — Sales</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎂</text></svg>">
+<style>
+  :root{
+    --cream: #FFF8F0;
+    --cream-deep: #FBEEDD;
+    --berry: #8B2942;
+    --berry-dark: #6E1F34;
+    --berry-light: #F6DDE3;
+    --caramel: #E8A33D;
+    --caramel-dark: #C9821F;
+    --cocoa: #3B2A20;
+    --ink-muted: #8A7A70;
+    --ok: #3F9A5C;
+    --danger: #D64550;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; min-height:100vh;
+    background: linear-gradient(180deg, var(--cream-deep), var(--cream));
+    font-family: -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+    color: var(--cocoa);
+    padding: 20px 14px 60px;
+  }
+  .wrap{ max-width: 520px; margin: 0 auto; }
+  header{ text-align:center; margin-bottom: 18px; position:relative; }
+  header .emoji{ font-size: 34px; }
+  header h1{ font-size: 20px; margin: 6px 0 2px; }
+  header .shop-name{ font-weight:700; color: var(--berry); }
+  header .date{ font-size: 13px; color: var(--ink-muted); }
+  header .gear-btn{
+    position:absolute; top:0; right:0; background:none; border:none;
+    font-size:20px; cursor:pointer; padding:4px 8px; color: var(--ink-muted);
+  }
+
+  .setup-card, .card{
+    background:#fff; border-radius:16px; padding:18px;
+    box-shadow: 0 8px 24px rgba(139,41,66,0.08);
+    margin-bottom:14px;
+  }
+  .setup-card label{ font-size:13px; font-weight:600; display:block; margin-bottom:6px; }
+  .setup-card input{
+    width:100%; padding:11px 12px; border-radius:10px; border:1px solid #E8D9CE;
+    font-size:14px; margin-bottom:10px;
+  }
+  .setup-card button{
+    width:100%; padding:11px; border-radius:10px; border:none;
+    background: var(--berry); color:#fff; font-weight:700; font-size:14px;
+    cursor:pointer;
+  }
+  .setup-card button:hover{ background: var(--berry-dark); }
+  .setup-card p{ font-size:12px; color: var(--ink-muted); margin:6px 0 0; }
+
+  .filter-bar{ display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+  .filter-btn{
+    flex:1; min-width:88px; padding:9px 10px; border-radius:10px; border:1px solid #E8D9CE;
+    background:#fff; color: var(--cocoa); font-weight:600; font-size:13px; cursor:pointer;
+  }
+  .filter-btn.active{ background: var(--berry); border-color: var(--berry); color:#fff; }
+  .filter-btn:hover:not(.active){ background: var(--berry-light); }
+  #customDateInput{
+    padding:9px 10px; border-radius:10px; border:1px solid #E8D9CE; font-size:13px;
+    width:100%; margin-top:8px;
+  }
+
+  .big-stat{ text-align:center; padding: 22px 18px; }
+  .big-stat .label{ font-size:14px; color: var(--ink-muted); font-weight:600; }
+  .big-stat .value{ font-size: 38px; font-weight:800; color: var(--berry); margin-top: 4px; }
+  .big-stat .sub{ font-size:12px; color: var(--ink-muted); margin-top:4px; }
+  .big-stat .formula{ font-size:11px; color: var(--ink-muted); margin-top:6px; }
+
+  .section-label{ font-size:12px; font-weight:700; color: var(--ink-muted); text-transform:uppercase; letter-spacing:.04em; margin: 4px 2px 8px; }
+
+  .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:14px; }
+  .grid.cols-3{ grid-template-columns: 1fr 1fr 1fr; gap:10px; }
+  .stat{ background:#fff; border-radius:14px; padding:14px; box-shadow: 0 6px 18px rgba(139,41,66,0.06); }
+  .stat .icon{ font-size:18px; }
+  .stat .label{ font-size:12.5px; color: var(--ink-muted); font-weight:600; margin-top:4px; }
+  .stat .value{ font-size:18px; font-weight:800; margin-top:2px; }
+  .stat .sub{ font-size:11px; color: var(--ink-muted); margin-top:2px; }
+  .stat.cash .value{ color:#3F9A5C; }
+  .stat.upi .value{ color:#3B7EA1; }
+  .stat.card .value{ color:#C9821F; }
+  .stat.takeaway .value{ color:#8B2942; }
+  .stat.dining .value{ color:#6E4A9E; }
+  .stat.order .value{ color:#D64550; }
+
+  .footer-row{ display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
+  .footer-row .updated{ font-size:12px; color: var(--ink-muted); }
+  .icon-btn{
+    background:none; border:1px solid #E8D9CE; border-radius:10px; padding:7px 12px;
+    font-size:13px; color: var(--berry); cursor:pointer; font-weight:600;
+  }
+  .icon-btn:hover{ background: var(--berry-light); }
+  .error-box{
+    background:#FBE7E9; color: var(--danger); border-radius:12px; padding:12px 14px;
+    font-size:13px; margin-bottom:14px;
+  }
+  .success-box{
+    background:#E4F3E8; color: var(--ok); border-radius:12px; padding:10px 12px;
+    font-size:13px; margin-bottom:10px;
+  }
+  .change-url{ text-align:center; margin-top:16px; }
+  .change-url a{ font-size:12px; color: var(--ink-muted); cursor:pointer; text-decoration:underline; margin: 0 8px; }
+  .hidden{ display:none !important; }
+  .spinner{ text-align:center; padding: 30px 0; color: var(--ink-muted); font-size:13px; }
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(59,42,32,0.45); display:flex;
+    align-items:center; justify-content:center; padding:16px; z-index:50;
+  }
+  .modal-box{ background:#fff; border-radius:16px; padding:20px; width:100%; max-width:380px; }
+  .modal-box h3{ margin:0 0 12px; font-size:16px; }
+  .modal-box label{ font-size:13px; font-weight:600; display:block; margin-bottom:6px; }
+  .modal-box input{
+    width:100%; padding:10px 12px; border-radius:10px; border:1px solid #E8D9CE;
+    font-size:14px; margin-bottom:10px;
+  }
+  .modal-actions{ display:flex; gap:8px; margin-top:6px; }
+  .modal-actions button{ flex:1; padding:10px; border-radius:10px; border:none; font-weight:700; font-size:13px; cursor:pointer; }
+  .modal-actions .save-btn{ background: var(--berry); color:#fff; }
+  .modal-actions .cancel-btn{ background:#F1E6DC; color: var(--cocoa); }
+
+  .status-pill{ display:inline-block; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700; }
+  .status-pill.open{ background:#E4F0FB; color:#3B7EA1; }
+  .status-pill.balanced{ background:#E4F3E8; color:#3F9A5C; }
+  .status-pill.shortage{ background:#FBE7E9; color: var(--danger); }
+  .status-pill.excess{ background:#FDF1DE; color: var(--caramel-dark); }
+  .status-pill.unavailable{ background:#F1E6DC; color: var(--ink-muted); }
+  .stat.cashdrawer .value{ color:#3B7EA1; }
+  .stat.expense .value{ color: var(--danger); }
+  .unavailable-note{ font-size:11px; color: var(--ink-muted); margin-top:2px; }
+  .view-summary-btn{
+    width:100%; padding:12px; border-radius:12px; border:none; margin-top:6px;
+    background: var(--cocoa); color:#fff; font-weight:700; font-size:14px; cursor:pointer;
+  }
+  .view-summary-btn:hover{ background:#241a13; }
+
+  .day-summary-modal .modal-box{ max-width: 420px; max-height:88vh; overflow-y:auto; }
+  .receipt-80mm{
+    width:100%; max-width:340px; margin:0 auto; font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size:13px; font-weight:600; line-height:1.35; color:#000; background:#fff;
+  }
+  .receipt-80mm .r-center{ text-align:center; }
+  .receipt-80mm .r-shop-name{ font-size:16px; font-weight:800; }
+  .receipt-80mm .r-shop-info{ font-size:11px; font-weight:600; margin:0; }
+  .receipt-80mm .r-line{ border-top:1.5px dashed #000; margin:6px 0; width:100%; }
+  .receipt-80mm table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  .receipt-80mm td{ padding:2px 0; vertical-align:top; word-break:break-word; }
+  .receipt-80mm .r-total-row{ font-weight:800; font-size:14px; }
+  .receipt-80mm .r-footer{ text-align:center; margin-top:8px; font-size:11.5px; font-weight:700; }
+  .receipt-80mm .r-remarks{ font-size:12px; font-weight:700; margin-top:5px; }
+  .receipt-80mm .r-items-head td{ font-weight:800; font-size:13px; border-bottom:1.5px dashed #000; padding-bottom:3px; }
+  .receipt-80mm .r-cell-name{ text-align:left; }
+  .receipt-80mm .r-cell-num{ text-align:right; }
+  .receipt-80mm .r-gst-head{ font-weight:800; font-size:12.5px; border-bottom:1.5px dashed #000; padding-bottom:2px; margin-bottom:3px; }
+  .receipt-80mm .r-denom-head{ font-weight:800; font-size:12.5px; margin-top:4px; }
+  .day-summary-actions{ display:flex; gap:8px; margin-top:14px; }
+  .day-summary-actions button{ flex:1; padding:10px; border-radius:10px; border:none; font-weight:700; font-size:13px; cursor:pointer; }
+  .day-summary-actions .print-btn{ background: var(--berry); color:#fff; }
+  .day-summary-actions .close-btn{ background:#F1E6DC; color: var(--cocoa); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <button class="gear-btn hidden" id="gearBtn" title="Change Password">⚙</button>
+    <div class="emoji">🎂</div>
+    <h1><span class="shop-name" id="shopNameLabel">Owner Dashboard</span></h1>
+    <div class="date" id="dateLabel">—</div>
+  </header>
+
+  <div class="setup-card" id="setupCard">
+    <label>Owner ID</label>
+    <input type="text" id="idInput" placeholder="admin" autocomplete="username">
+    <label>Owner Password</label>
+    <input type="password" id="passInput" placeholder="admin123" autocomplete="current-password">
+    <button id="unlockBtn">Unlock Dashboard</button>
+    <p>Enter your Owner ID and Password to view the sales dashboard.</p>
+  </div>
+
+  <div id="errorBox" class="error-box hidden"></div>
+  <div id="loadingBox" class="spinner hidden">Loading sales…</div>
+
+  <div class="filter-bar hidden" id="filterBar">
+    <button class="filter-btn active" id="btnToday" data-range="today">Today</button>
+    <button class="filter-btn" id="btnYesterday" data-range="yesterday">Yesterday</button>
+    <button class="filter-btn" id="btnCustom" data-range="custom">📅 Pick Date</button>
+  </div>
+  <input type="date" id="customDateInput" class="hidden">
+
+  <div id="dashboard" class="hidden">
+
+    <!-- Today's Total Sale = Takeaway + Dining + Order -->
+    <div class="card big-stat">
+      <div class="label" id="totalBillLabel">Total Sale</div>
+      <div class="value" id="totalSalesVal">₹0.00</div>
+      <div class="sub" id="billsCountVal">0 bills settled</div>
+      <div class="formula">Takeaway + Dining + Order</div>
+    </div>
+
+    <div class="section-label">Sales Breakdown</div>
+    <div class="grid cols-3">
+      <div class="stat takeaway">
+        <div class="icon">🥡</div>
+        <div class="label">Total Takeaway</div>
+        <div class="value" id="takeAwayVal">₹0.00</div>
+      </div>
+      <div class="stat dining">
+        <div class="icon">🍽️</div>
+        <div class="label">Today's Dining</div>
+        <div class="value" id="diningVal">₹0.00</div>
+      </div>
+      <div class="stat order">
+        <div class="icon">🎂</div>
+        <div class="label">Today's Order</div>
+        <div class="value" id="orderVal">₹0.00</div>
+        <div class="sub" id="orderSubVal"></div>
+      </div>
+    </div>
+
+    <div class="section-label">Payment Methods</div>
+    <div class="grid cols-3">
+      <div class="stat cash">
+        <div class="icon">💵</div>
+        <div class="label">Total Cash</div>
+        <div class="value" id="cashVal">₹0.00</div>
+      </div>
+      <div class="stat upi">
+        <div class="icon">📱</div>
+        <div class="label">Today's UPI</div>
+        <div class="value" id="upiVal">₹0.00</div>
+      </div>
+      <div class="stat card">
+        <div class="icon">💳</div>
+        <div class="label">Today's Card</div>
+        <div class="value" id="cardVal">₹0.00</div>
+      </div>
+    </div>
+
+    <div class="section-label">Cash Drawer &amp; Expenses</div>
+    <div class="grid">
+      <div class="stat cashdrawer">
+        <div class="icon">🗄️</div>
+        <div class="label">Cash Drawer</div>
+        <div class="value" id="cashDrawerVal">—</div>
+        <div id="cashDrawerSub" class="unavailable-note"></div>
+      </div>
+      <div class="stat expense">
+        <div class="icon">🧾</div>
+        <div class="label">Today's Expense</div>
+        <div class="value" id="expenseVal">—</div>
+        <div id="expenseSub" class="unavailable-note"></div>
+      </div>
+    </div>
+
+    <button class="view-summary-btn" id="viewDaySummaryBtn">📋 View Day Summary Report</button>
+
+    <div class="footer-row">
+      <span class="updated" id="updatedLabel">Updated —</span>
+      <button class="icon-btn" id="refreshBtn">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div class="change-url hidden" id="changeUrlRow">
+    <a id="changeUrlLink">Re-enter Password</a>
+    <a id="lockLink">Lock Dashboard</a>
+  </div>
+</div>
+
+<div id="passwordModalOverlay" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3>Change Owner Password</h3>
+    <div id="pwdError" class="error-box hidden"></div>
+    <div id="pwdSuccess" class="success-box hidden">Password changed successfully.</div>
+    <label>Current Password</label>
+    <input type="password" id="pwdCurrent">
+    <label>New Password</label>
+    <input type="password" id="pwdNew" placeholder="At least 4 characters">
+    <label>Confirm New Password</label>
+    <input type="password" id="pwdConfirm">
+    <div class="modal-actions">
+      <button class="cancel-btn" id="pwdCancelBtn">Cancel</button>
+      <button class="save-btn" id="pwdSaveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="daySummaryModalOverlay" class="modal-overlay hidden day-summary-modal">
+  <div class="modal-box">
+    <div id="daySummaryReceipt"></div>
+    <div class="day-summary-actions">
+      <button class="close-btn" id="daySummaryCloseBtn">Close</button>
+      <button class="print-btn" id="daySummaryPrintBtn">🖨 Print</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var PASS_KEY = 'csb_owner_view_pass'; 
+  var REFRESH_MS = 30000; 
+
+  var OWNER_ID = 'admin';
+  var OWNER_PASSWORD = 'admin123';
+
+  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyB-qt_pmhSXK73FronEfZZ9H48U3rZS9Jdi9bvv-CoW6Jnyi__SEGKgD7UJAaI_rs/exec';
+
+  var setupCard = document.getElementById('setupCard');
+  var dashboard = document.getElementById('dashboard');
+  var errorBox = document.getElementById('errorBox');
+  var loadingBox = document.getElementById('loadingBox');
+  var changeUrlRow = document.getElementById('changeUrlRow');
+  var filterBar = document.getElementById('filterBar');
+  var customDateInput = document.getElementById('customDateInput');
+  var gearBtn = document.getElementById('gearBtn');
+  var timer = null;
+
+  var currentRange = 'today';
+  var shopToday = null; 
+  var lastSummary = null; 
+
+  function getSavedUrl() { return SCRIPT_URL; }
+  function getSavedPass() { try { return localStorage.getItem(PASS_KEY) || ''; } catch (e) { return ''; } }
+  function savePass(pass) { try { localStorage.setItem(PASS_KEY, pass); } catch (e) {} }
+  function clearSavedPass() { try { localStorage.removeItem(PASS_KEY); } catch (e) {} }
+
+  function fmtMoney(n) {
+    var v = Number(n || 0);
+    return '₹' + v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // Grand total = Takeaway + Dining + Order. Falls back to computing it
+  // client-side (old backend that hasn't been redeployed yet) so the
+  // dashboard never just shows a stale/zero number.
+  function grandTotalOf(summary) {
+    if (summary.grandTotal != null) return summary.grandTotal;
+    var orderTotal = summary.orderTotal != null ? summary.orderTotal : (Number(summary.advancePaid || 0) + Number(summary.balancePaid || 0));
+    return Number(summary.takeAwayTotal || 0) + Number(summary.diningTotal || 0) + Number(orderTotal);
+  }
+  function orderTotalOf(summary) {
+    return summary.orderTotal != null ? summary.orderTotal : (Number(summary.advancePaid || 0) + Number(summary.balancePaid || 0));
+  }
+
+  var DENOMS = [500, 200, 100, 50, 20, 10, 5, 2, 1];
+  function denomTotal(denoms) {
+    denoms = denoms || {};
+    return DENOMS.reduce(function (sum, d) { return sum + (Number(denoms[d]) || 0) * d; }, 0);
+  }
+  function denomTableHtml(title, denoms) {
+    if (!denoms) return '';
+    var rows = DENOMS
+      .filter(function (d) { return Number(denoms[d]) > 0; })
+      .map(function (d) {
+        return '<tr><td>₹' + d + ' × ' + Number(denoms[d]) + '</td><td class="r-cell-num">' + fmtMoney(d * Number(denoms[d])) + '</td></tr>';
+      }).join('');
+    if (!rows) return '';
+    return '<div class="r-denom-head">' + escapeHtml(title) + '</div>' +
+      '<table>' + rows + '<tr class="r-total-row"><td>Total</td><td class="r-cell-num">' + fmtMoney(denomTotal(denoms)) + '</td></tr></table>';
+  }
+
+  function addDaysToDateStr(dateStr, days) {
+    var d = new Date(dateStr + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().substring(0, 10);
+  }
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.classList.remove('hidden');
+    loadingBox.classList.add('hidden');
+  }
+
+  function rangeLabel() {
+    if (currentRange === 'today') return "Today's";
+    if (currentRange === 'yesterday') return "Yesterday's";
+    return 'Selected Day\u2019s';
+  }
+
+  function render(summary) {
+    document.getElementById('shopNameLabel').textContent = summary.shopName || 'Owner Dashboard';
+    document.getElementById('dateLabel').textContent = summary.date || '';
+
+    var grandTotal = grandTotalOf(summary);
+    var orderTotal = orderTotalOf(summary);
+
+    document.getElementById('totalBillLabel').textContent = rangeLabel() + ' Total Sale';
+    document.getElementById('totalSalesVal').textContent = fmtMoney(grandTotal);
+    document.getElementById('billsCountVal').textContent = (summary.bills || 0) + ' bill' + (summary.bills === 1 ? '' : 's') + ' settled';
+
+    document.getElementById('takeAwayVal').textContent = fmtMoney(summary.takeAwayTotal);
+    document.getElementById('diningVal').textContent = fmtMoney(summary.diningTotal);
+    document.getElementById('orderVal').textContent = fmtMoney(orderTotal);
+    document.getElementById('orderSubVal').textContent =
+      'Adv ' + fmtMoney(summary.advancePaid) + ' + Bal ' + fmtMoney(summary.balancePaid) +
+      (summary.todayOrders ? ' · ' + summary.todayOrders + ' order' + (summary.todayOrders === 1 ? '' : 's') : '');
+
+    document.getElementById('cashVal').textContent = fmtMoney(summary.cash);
+    document.getElementById('upiVal').textContent = fmtMoney(summary.upi);
+    document.getElementById('cardVal').textContent = fmtMoney(summary.card);
+
+    document.getElementById('updatedLabel').textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN');
+
+    var cd = summary.cashDrawer;
+    var cashDrawerValEl = document.getElementById('cashDrawerVal');
+    var cashDrawerSubEl = document.getElementById('cashDrawerSub');
+    if (cd) {
+      var statusText = cd.status === 'open' ? 'Open' : (cd.diffStatus ? cd.diffStatus.charAt(0).toUpperCase() + cd.diffStatus.slice(1) : '-');
+      var pillClass = cd.status === 'open' ? 'open' : (cd.diffStatus || 'unavailable');
+      cashDrawerValEl.innerHTML = fmtMoney(cd.status === 'open' ? cd.openingCash : cd.actualCash) +
+        ' <span class="status-pill ' + pillClass + '">' + escapeHtml(statusText) + '</span>';
+      cashDrawerSubEl.textContent = cd.status === 'open'
+        ? 'Opened by ' + (cd.staffName || '-')
+        : ('Opened by ' + (cd.staffName || '-') + (cd.difference != null ? ' · Diff: ' + (cd.difference >= 0 ? '+' : '') + fmtMoney(cd.difference) : ''));
+    } else {
+      cashDrawerValEl.innerHTML = '<span class="status-pill unavailable">Not set up</span>';
+      cashDrawerSubEl.textContent = 'No drawer session recorded for this date yet.';
+    }
+
+    var exp = summary.expenses;
+    var expenseValEl = document.getElementById('expenseVal');
+    var expenseSubEl = document.getElementById('expenseSub');
+    if (exp) {
+      expenseValEl.textContent = fmtMoney(exp.total);
+      expenseSubEl.textContent = (exp.items ? exp.items.length : 0) + ' expense' + ((exp.items && exp.items.length === 1) ? '' : 's') + ' logged';
+    } else {
+      expenseValEl.innerHTML = '<span class="status-pill unavailable">Not set up</span>';
+      expenseSubEl.textContent = 'No expenses recorded for this date yet.';
+    }
+
+    if (currentRange === 'today') shopToday = summary.date;
+    lastSummary = summary;
+
+    errorBox.classList.add('hidden');
+    loadingBox.classList.add('hidden');
+    setupCard.classList.add('hidden');
+    dashboard.classList.remove('hidden');
+    filterBar.classList.remove('hidden');
+    changeUrlRow.classList.remove('hidden');
+    gearBtn.classList.remove('hidden');
+  }
+
+  function buildQuery(extra) {
+    var url = getSavedUrl();
+    var sep = url.indexOf('?') === -1 ? '?' : '&';
+    var qs = 'pass=' + encodeURIComponent(getSavedPass());
+    Object.keys(extra || {}).forEach(function (k) { qs += '&' + k + '=' + encodeURIComponent(extra[k]); });
+    return url + sep + qs;
+  }
+
+  function fetchByRange(range, showLoading) {
+    var url = getSavedUrl();
+    if (!url || !getSavedPass()) { setupCard.classList.remove('hidden'); dashboard.classList.add('hidden'); filterBar.classList.add('hidden'); return; }
+    if (showLoading) loadingBox.classList.remove('hidden');
+
+    currentRange = range;
+    document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
+
+    var fetchUrl;
+    if (range === 'today') {
+      document.getElementById('btnToday').classList.add('active');
+      customDateInput.classList.add('hidden');
+      fetchUrl = buildQuery({ action: 'today' });
+    } else if (range === 'yesterday') {
+      document.getElementById('btnYesterday').classList.add('active');
+      customDateInput.classList.add('hidden');
+      if (shopToday) {
+        fetchUrl = buildQuery({ date: addDaysToDateStr(shopToday, -1) });
+      } else {
+        fetch(buildQuery({ action: 'today' })).then(function (res) { return res.json(); }).then(function (data) {
+          if (data && data.ok) {
+            shopToday = data.date;
+            fetchByRange('yesterday', showLoading);
+          } else {
+            handleResponse(data);
+          }
+        }).catch(function (err) { showError('Could not connect. (' + err.message + ')'); });
+        return;
+      }
+    } else {
+      document.getElementById('btnCustom').classList.add('active');
+      customDateInput.classList.remove('hidden');
+      var picked = customDateInput.value || (shopToday || new Date().toISOString().substring(0, 10));
+      customDateInput.value = picked;
+      fetchUrl = buildQuery({ date: picked });
+    }
+
+    fetch(fetchUrl).then(function (res) { return res.json(); }).then(handleResponse)
+      .catch(function (err) { showError('Could not load sales. Check your internet connection, then tap Refresh. (' + err.message + ')'); });
+  }
+
+  function handleResponse(data) {
+    if (!data || data.ok === false) {
+      if (data && data.error === 'unauthorized') {
+        clearSavedPass();
+        setupCard.classList.remove('hidden');
+        dashboard.classList.add('hidden');
+        filterBar.classList.add('hidden');
+        showError('Incorrect owner password. Please enter it again.');
+        return;
+      }
+      showError((data && (data.message || data.error)) || 'Something went wrong.');
+      return;
+    }
+    render(data);
+  }
+
+  document.getElementById('unlockBtn').addEventListener('click', function () {
+    var id = document.getElementById('idInput').value.trim();
+    var pass = document.getElementById('passInput').value;
+    if (!id || !pass) { showError('Please enter your Owner ID and Password.'); return; }
+    if (id !== OWNER_ID || pass !== OWNER_PASSWORD) { showError('Incorrect Owner ID or Password.'); return; }
+    savePass(pass);
+    fetchByRange('today', true);
+    startAutoRefresh();
+  });
+
+  document.getElementById('refreshBtn').addEventListener('click', function () { fetchByRange(currentRange, true); });
+  document.getElementById('btnToday').addEventListener('click', function () { fetchByRange('today', true); });
+  document.getElementById('btnYesterday').addEventListener('click', function () { fetchByRange('yesterday', true); });
+  document.getElementById('btnCustom').addEventListener('click', function () { fetchByRange('custom', true); });
+  customDateInput.addEventListener('change', function () { fetchByRange('custom', true); });
+
+  document.getElementById('changeUrlLink').addEventListener('click', function () {
+    document.getElementById('idInput').value = OWNER_ID;
+    document.getElementById('passInput').value = '';
+    setupCard.classList.remove('hidden');
+    dashboard.classList.add('hidden');
+    filterBar.classList.add('hidden');
+    customDateInput.classList.add('hidden');
+    changeUrlRow.classList.add('hidden');
+    gearBtn.classList.add('hidden');
+  });
+
+  document.getElementById('lockLink').addEventListener('click', function () {
+    clearSavedPass();
+    document.getElementById('idInput').value = '';
+    document.getElementById('passInput').value = '';
+    setupCard.classList.remove('hidden');
+    dashboard.classList.add('hidden');
+    filterBar.classList.add('hidden');
+    customDateInput.classList.add('hidden');
+    changeUrlRow.classList.add('hidden');
+    gearBtn.classList.add('hidden');
+    if (timer) clearInterval(timer);
+  });
+
+  function startAutoRefresh() {
+    if (timer) clearInterval(timer);
+    timer = setInterval(function () { fetchByRange(currentRange, false); }, REFRESH_MS);
+  }
+
+  var pwdOverlay = document.getElementById('passwordModalOverlay');
+  var pwdError = document.getElementById('pwdError');
+  var pwdSuccess = document.getElementById('pwdSuccess');
+
+  gearBtn.addEventListener('click', function () {
+    pwdError.classList.add('hidden');
+    pwdSuccess.classList.add('hidden');
+    document.getElementById('pwdCurrent').value = '';
+    document.getElementById('pwdNew').value = '';
+    document.getElementById('pwdConfirm').value = '';
+    pwdOverlay.classList.remove('hidden');
+  });
+  document.getElementById('pwdCancelBtn').addEventListener('click', function () { pwdOverlay.classList.add('hidden'); });
+
+  document.getElementById('pwdSaveBtn').addEventListener('click', function () {
+    var current = document.getElementById('pwdCurrent').value;
+    var next = document.getElementById('pwdNew').value;
+    var confirm = document.getElementById('pwdConfirm').value;
+    pwdError.classList.add('hidden');
+    pwdSuccess.classList.add('hidden');
+
+    if (!current) { pwdError.textContent = 'Enter your current password.'; pwdError.classList.remove('hidden'); return; }
+    if (!next || next.length < 4) { pwdError.textContent = 'New password must be at least 4 characters.'; pwdError.classList.remove('hidden'); return; }
+    if (next !== confirm) { pwdError.textContent = 'New passwords do not match.'; pwdError.classList.remove('hidden'); return; }
+
+    var url = getSavedUrl();
+    var sep = url.indexOf('?') === -1 ? '?' : '&';
+    var reqUrl = url + sep + 'action=changePassword&oldPassword=' + encodeURIComponent(current) + '&newPassword=' + encodeURIComponent(next);
+
+    fetch(reqUrl).then(function (res) { return res.json(); }).then(function (data) {
+      if (data && data.ok) {
+        savePass(next);
+        pwdSuccess.classList.remove('hidden');
+        setTimeout(function () { pwdOverlay.classList.add('hidden'); }, 1200);
+      } else {
+        pwdError.textContent = (data && data.error) || 'Could not change password.';
+        pwdError.classList.remove('hidden');
+      }
+    }).catch(function (err) {
+      pwdError.textContent = 'Could not connect. (' + err.message + ')';
+      pwdError.classList.remove('hidden');
+    });
+  });
+
+  function statusLabel(cd) {
+    if (!cd) return '-';
+    if (cd.status === 'open') return 'Open';
+    if (cd.diffStatus) return cd.diffStatus.charAt(0).toUpperCase() + cd.diffStatus.slice(1);
+    return '-';
+  }
+
+  function buildDaySummaryReceiptHtml(summary) {
+    var cd = summary.cashDrawer || null;
+    var exp = summary.expenses || { total: 0, items: [] };
+    var cashExpense = Number((exp && exp.cash) || 0);
+    var grandTotal = grandTotalOf(summary);
+    var orderTotal = orderTotalOf(summary);
+
+    var infoLines = [
+      'Date : ' + (summary.date || '-'),
+      'Time : ' + new Date().toLocaleString('en-IN'),
+      cd && cd.staffName ? 'Staff : ' + escapeHtml(cd.staffName) : null,
+      'Open Draw : ' + (cd && cd.openingTime ? new Date(cd.openingTime).toLocaleString('en-IN') : '-'),
+      'Open Draw Amount : ' + fmtMoney(cd ? cd.openingCash : 0),
+      'Expense Cash : ' + (cashExpense > 0 ? '-' : '') + fmtMoney(cashExpense),
+      'Close Draw : ' + (cd && cd.closingTime ? new Date(cd.closingTime).toLocaleString('en-IN') : '-'),
+      'Close Draw Amount : ' + (cd && cd.actualCash != null ? fmtMoney(cd.actualCash) : '-'),
+      'Status : ' + escapeHtml(statusLabel(cd)),
+      'Difference : ' + (cd && cd.difference != null ? (cd.difference >= 0 ? '+' : '') + fmtMoney(cd.difference) : '-')
+    ].filter(function (l) { return l != null; });
+
+    var orderRows = [
+      ['Take Away Total', fmtMoney(summary.takeAwayTotal)],
+      ['Dining Total', fmtMoney(summary.diningTotal)],
+      ['Order Total (Adv+Bal)', fmtMoney(orderTotal)],
+      ['  Order Advance', fmtMoney(summary.advancePaid)],
+      ['  Order Balance', fmtMoney(summary.balancePaid)]
+    ];
+
+    var paymentRows = [
+      ['Total Cash Sales', fmtMoney(summary.cash)],
+      ['Total UPI Sales', fmtMoney(summary.upi)],
+      ['Total Card Sales', fmtMoney(summary.card)],
+      ["Today's Expense (Cash)", '- ' + fmtMoney(cashExpense)],
+      ["Today's Expense (Total)", fmtMoney(exp.total)]
+    ];
+
+    var expenseItems = exp.items || [];
+    var expenseDetailHtml = expenseItems.length ? (
+      '<div class="r-line"></div><div class="r-gst-head">Expense Details</div><table>' +
+      expenseItems.map(function (e) {
+        return '<tr><td class="r-cell-name">' + escapeHtml(e.category || '-') +
+          (e.description ? ' - ' + escapeHtml(e.description) : '') +
+          '<br><span style="font-size:10px;">' + escapeHtml(e.paymentMethod || '-') + '</span></td>' +
+          '<td class="r-cell-num">- ' + fmtMoney(e.amount) + '</td></tr>';
+      }).join('') + '</table>'
+    ) : '';
+
+    var denomHtml = cd ? (denomTableHtml('Opening Denominations', cd.openingDenoms) + denomTableHtml('Closing Denominations', cd.closingDenoms)) : '';
+
+    function rows(list) { return list.map(function (r) { return '<tr><td>' + r[0] + '</td><td class="r-cell-num">' + r[1] + '</td></tr>'; }).join(''); }
+
+    return '' +
+      '<div class="receipt-80mm">' +
+        '<div class="r-center">' +
+          '<div class="r-shop-name">' + escapeHtml(summary.shopName || 'Cake Shop') + '</div>' +
+        '</div>' +
+        '<div class="r-center"><div class="r-shop-name" style="font-size:14px;">DAY SUMMARY REPORT</div></div>' +
+        '<div class="r-line"></div>' +
+        '<table>' + infoLines.map(function (l) { return '<tr><td>' + l + '</td></tr>'; }).join('') + '</table>' +
+        '<div class="r-line"></div>' +
+        '<table><tr class="r-total-row"><td>Total Sale (Takeaway+Dining+Order)</td><td class="r-cell-num">' + fmtMoney(grandTotal) + '</td></tr></table>' +
+        '<div class="r-line"></div>' +
+        '<table>' + rows(orderRows) + '</table>' +
+        '<div class="r-line"></div>' +
+        '<table>' + rows(paymentRows) + '</table>' +
+        expenseDetailHtml +
+        (denomHtml ? '<div class="r-line"></div>' + denomHtml : '') +
+        (cd && cd.closingNotes ? '<div class="r-line"></div><div class="r-remarks"><b>Closing Notes:</b> ' + escapeHtml(cd.closingNotes) + '</div>' : '') +
+        '<div class="r-line"></div>' +
+        '<div class="r-footer">Day Summary — ' + (summary.date || '') + '<br>Powered By <i>SURYA CODE</i></div>' +
+      '</div>';
+  }
+
+  var daySummaryOverlay = document.getElementById('daySummaryModalOverlay');
+  document.getElementById('viewDaySummaryBtn').addEventListener('click', function () {
+    if (!lastSummary) { showError('Load the dashboard first, then try again.'); return; }
+    document.getElementById('daySummaryReceipt').innerHTML = buildDaySummaryReceiptHtml(lastSummary);
+    daySummaryOverlay.classList.remove('hidden');
+  });
+  document.getElementById('daySummaryCloseBtn').addEventListener('click', function () {
+    daySummaryOverlay.classList.add('hidden');
+  });
+  document.getElementById('daySummaryPrintBtn').addEventListener('click', function () {
+    if (!lastSummary) return;
+    var win = window.open('', '_blank', 'width=400,height=600');
+    // Deliberately NOT writing a literal script tag pair into this HTML
+    // string. Triggering print() via win.onload instead avoids ever
+    // writing a closing-script-tag-shaped string into the popup's HTML.
+    win.document.write('<html><head><title>Day Summary</title><style>' +
+      'body{font-family:monospace;padding:8px;} ' +
+      '.r-center{text-align:center;} .r-shop-name{font-size:16px;font-weight:800;} ' +
+      '.r-line{border-top:1.5px dashed #000;margin:6px 0;} table{width:100%;border-collapse:collapse;font-size:12.5px;} ' +
+      'td{padding:2px 0;vertical-align:top;} .r-cell-num{text-align:right;} .r-cell-name{text-align:left;} ' +
+      '.r-gst-head{font-weight:800;border-bottom:1.5px dashed #000;margin-bottom:3px;} ' +
+      '.r-denom-head{font-weight:800;margin-top:4px;} .r-total-row{font-weight:800;} ' +
+      '.r-footer{text-align:center;margin-top:8px;font-size:11.5px;font-weight:700;} ' +
+      '.r-remarks{font-size:12px;font-weight:700;margin-top:5px;}' +
+      '</style></head><body>' + buildDaySummaryReceiptHtml(lastSummary) +
+      '</body></html>');
+    win.document.close();
+    win.onload = function () {
+      setTimeout(function () { win.print(); }, 300);
+    };
+  });
+
+  var savedPass = getSavedPass();
+  if (savedPass) {
+    fetchByRange('today', true);
+    startAutoRefresh();
+  }
+})();
+</script>
+</body>
+</html>
