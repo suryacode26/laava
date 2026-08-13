@@ -506,7 +506,8 @@
   var REFRESH_MS = 30000; 
 
   var OWNER_ID = 'laavacakes';
-
+  // NOTE: there is deliberately no local OWNER_PASSWORD constant. The
+  // password is verified server-side (Google Apps Script) on every
   // request via the `pass` query param — see buildQuery()/fetchByRange().
   // A local hardcoded password used to exist here and caused a bug: after
   // changing the password via the gear icon, only the ORIGINAL default
