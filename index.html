@@ -514,7 +514,7 @@
   // password would still work on the Unlock screen, because the unlock
   // check compared against this constant instead of asking the server.
 
-  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzi0LftnwzsN7-ln1PUO1aIUCvT1LuB5ly7yfkLJpGd5qbTrulHv8zRo74j7YmSQ8Se/exec';
+  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbztypHyEta6HNC0KZfgqg1VfA3JCjRWvf8lT7ojfq6uI64S1aH50yBl9G4ytlBe5wq9BA/exec';
 
   var setupCard = document.getElementById('setupCard');
   var dashboard = document.getElementById('dashboard');
@@ -1152,7 +1152,7 @@
       columns: [
         { key: 'invoiceNo', label: 'Invoice No' },
         { key: 'date', label: 'Date' },
-     
+
         { key: 'payment', label: 'Payment' },
         { key: 'subtotal', label: 'Subtotal', money: true },
         { key: 'discount', label: 'Discount', money: true },
@@ -1172,7 +1172,7 @@
       columns: [
         { key: 'invoiceNo', label: 'Bill No' },
         { key: 'date', label: 'Date' },
-    
+
         { key: 'payment', label: 'Payment' },
         { key: 'subtotal', label: 'Subtotal', money: true },
         { key: 'discount', label: 'Discount', money: true },
@@ -1192,7 +1192,7 @@
       columns: [
         { key: 'orderNo', label: 'Order No' },
         { key: 'date', label: 'Date' },
-      
+ 
         { key: 'customer', label: 'Customer' },
         { key: 'phone', label: 'Phone' },
         { key: 'deliveryDate', label: 'Delivery Date' },
@@ -1213,7 +1213,6 @@
         { key: 'source', label: 'Transaction Type' },
         { key: 'transactionType', label: 'Category' },
         { key: 'amount', label: 'Amount', money: true }
- 
       ],
       detailTitle: function (r) { return r.source + ' — ' + (r.reference || ''); }
     },
@@ -1271,7 +1270,8 @@
         { key: 'quantity', label: 'Quantity' },
         { key: 'unitPrice', label: 'Rate', money: true },
         { key: 'amount', label: 'Wastage Amount', money: true },
-        { key: 'staffName', label: 'Staff' }
+        { key: 'staffName', label: 'Staff' },
+        { key: 'remarks', label: 'Remarks' }
       ],
       detailTitle: function (r) { return r.productName || 'Wastage Record'; }
     }
