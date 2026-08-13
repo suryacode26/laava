@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Owner Dashboard — Sales</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎂</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2215%22 y=%2245%22 width=%2270%22 height=%2240%22 rx=%228%22 fill=%22%238B2942%22/><rect x=%2215%22 y=%2230%22 width=%2270%22 height=%2218%22 rx=%228%22 fill=%22%23E8A33D%22/><circle cx=%2250%22 cy=%2214%22 r=%228%22 fill=%22%23D64550%22/></svg>">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
   :root{
     --cream: #FFF8F0;
@@ -29,48 +30,57 @@
   }
   .wrap{ max-width: 520px; margin: 0 auto; }
   header{ text-align:center; margin-bottom: 18px; position:relative; }
-  header .emoji{ font-size: 34px; }
+  header .emoji{ font-size: 34px; color: var(--berry); animation: popIn .5s cubic-bezier(.34,1.56,.64,1); }
   header h1{ font-size: 20px; margin: 6px 0 2px; }
   header .shop-name{ font-weight:700; color: var(--berry); }
   header .date{ font-size: 13px; color: var(--ink-muted); }
   header .gear-btn{
     position:absolute; top:0; right:0; background:none; border:none;
-    font-size:20px; cursor:pointer; padding:4px 8px; color: var(--ink-muted);
+    font-size:18px; cursor:pointer; padding:6px 10px; color: var(--ink-muted);
+    border-radius:8px; transition: color .2s ease, background .2s ease, transform .2s ease;
   }
+  header .gear-btn:hover{ color: var(--berry); background: var(--berry-light); transform: rotate(30deg); }
 
   .setup-card, .card{
     background:#fff; border-radius:16px; padding:18px;
     box-shadow: 0 8px 24px rgba(139,41,66,0.08);
     margin-bottom:14px;
+    animation: fadeInUp .45s ease both;
   }
   .setup-card label{ font-size:13px; font-weight:600; display:block; margin-bottom:6px; }
   .setup-card input{
     width:100%; padding:11px 12px; border-radius:10px; border:1px solid #E8D9CE;
-    font-size:14px; margin-bottom:10px;
+    font-size:14px; margin-bottom:10px; transition: border-color .2s ease, box-shadow .2s ease;
   }
+  .setup-card input:focus{ outline:none; border-color: var(--berry); box-shadow: 0 0 0 3px var(--berry-light); }
   .setup-card button{
     width:100%; padding:11px; border-radius:10px; border:none;
     background: var(--berry); color:#fff; font-weight:700; font-size:14px;
-    cursor:pointer;
+    cursor:pointer; transition: background .2s ease, transform .15s ease;
   }
-  .setup-card button:hover{ background: var(--berry-dark); }
+  .setup-card button:hover{ background: var(--berry-dark); transform: translateY(-1px); }
+  .setup-card button:active{ transform: translateY(0); }
   .setup-card p{ font-size:12px; color: var(--ink-muted); margin:6px 0 0; }
 
-  .filter-bar{ display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+  .filter-bar{ display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center; animation: fadeInUp .45s ease both; }
   .filter-btn{
     flex:1; min-width:88px; padding:9px 10px; border-radius:10px; border:1px solid #E8D9CE;
     background:#fff; color: var(--cocoa); font-weight:600; font-size:13px; cursor:pointer;
+    transition: background .2s ease, border-color .2s ease, color .2s ease, transform .15s ease;
+    display:flex; align-items:center; justify-content:center; gap:6px;
   }
   .filter-btn.active{ background: var(--berry); border-color: var(--berry); color:#fff; }
-  .filter-btn:hover:not(.active){ background: var(--berry-light); }
+  .filter-btn:hover:not(.active){ background: var(--berry-light); transform: translateY(-1px); }
+  .filter-btn:active{ transform: translateY(0) scale(.97); }
   #customDateInput{
     padding:9px 10px; border-radius:10px; border:1px solid #E8D9CE; font-size:13px;
-    width:100%; margin-top:8px;
+    width:100%; margin-top:8px; transition: border-color .2s ease;
   }
 
   .big-stat{ text-align:center; padding: 22px 18px; }
   .big-stat .label{ font-size:14px; color: var(--ink-muted); font-weight:600; }
-  .big-stat .value{ font-size: 38px; font-weight:800; color: var(--berry); margin-top: 4px; }
+  .big-stat .value{ font-size: 38px; font-weight:800; color: var(--berry); margin-top: 4px; transition: transform .2s ease; }
+  .big-stat .value.bump{ animation: valuePop .35s ease; }
   .big-stat .sub{ font-size:12px; color: var(--ink-muted); margin-top:4px; }
   .big-stat .formula{ font-size:11px; color: var(--ink-muted); margin-top:6px; }
 
@@ -78,51 +88,65 @@
 
   .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:14px; }
   .grid.cols-3{ grid-template-columns: 1fr 1fr 1fr; gap:10px; }
-  .stat{ background:#fff; border-radius:14px; padding:14px; box-shadow: 0 6px 18px rgba(139,41,66,0.06); }
-  .stat .icon{ font-size:18px; }
+  .stat{
+    background:#fff; border-radius:14px; padding:14px; box-shadow: 0 6px 18px rgba(139,41,66,0.06);
+    animation: fadeInUp .45s ease both; transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .stat:hover{ transform: translateY(-2px); box-shadow: 0 10px 22px rgba(139,41,66,0.12); }
+  .stat .icon{ font-size:18px; display:inline-block; }
   .stat .label{ font-size:12.5px; color: var(--ink-muted); font-weight:600; margin-top:4px; }
-  .stat .value{ font-size:18px; font-weight:800; margin-top:2px; }
+  .stat .value{ font-size:18px; font-weight:800; margin-top:2px; transition: transform .2s ease; }
+  .stat .value.bump{ animation: valuePop .35s ease; }
   .stat .sub{ font-size:11px; color: var(--ink-muted); margin-top:2px; }
-  .stat.cash .value{ color:#3F9A5C; }
-  .stat.upi .value{ color:#3B7EA1; }
-  .stat.card .value{ color:#C9821F; }
-  .stat.takeaway .value{ color:#8B2942; }
-  .stat.dining .value{ color:#6E4A9E; }
-  .stat.order .value{ color:#D64550; }
+  .stat.cash .icon, .stat.cash .value{ color:#3F9A5C; }
+  .stat.upi .icon, .stat.upi .value{ color:#3B7EA1; }
+  .stat.card .icon, .stat.card .value{ color:#C9821F; }
+  .stat.takeaway .icon, .stat.takeaway .value{ color:#8B2942; }
+  .stat.dining .icon, .stat.dining .value{ color:#6E4A9E; }
+  .stat.order .icon, .stat.order .value{ color:#D64550; }
 
   .footer-row{ display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
   .footer-row .updated{ font-size:12px; color: var(--ink-muted); }
   .icon-btn{
     background:none; border:1px solid #E8D9CE; border-radius:10px; padding:7px 12px;
     font-size:13px; color: var(--berry); cursor:pointer; font-weight:600;
+    transition: background .2s ease, transform .15s ease; display:inline-flex; align-items:center; gap:6px;
   }
-  .icon-btn:hover{ background: var(--berry-light); }
+  .icon-btn:hover{ background: var(--berry-light); transform: translateY(-1px); }
+  .icon-btn:active{ transform: translateY(0) scale(.96); }
+  .icon-btn i.fa-spin{ animation-duration: .7s; }
   .error-box{
     background:#FBE7E9; color: var(--danger); border-radius:12px; padding:12px 14px;
-    font-size:13px; margin-bottom:14px;
+    font-size:13px; margin-bottom:14px; animation: fadeInUp .3s ease both;
   }
   .success-box{
     background:#E4F3E8; color: var(--ok); border-radius:12px; padding:10px 12px;
-    font-size:13px; margin-bottom:10px;
+    font-size:13px; margin-bottom:10px; animation: fadeInUp .3s ease both;
   }
   .change-url{ text-align:center; margin-top:16px; }
-  .change-url a{ font-size:12px; color: var(--ink-muted); cursor:pointer; text-decoration:underline; margin: 0 8px; }
+  .change-url a{ font-size:12px; color: var(--ink-muted); cursor:pointer; text-decoration:underline; margin: 0 8px; transition: color .2s ease; }
+  .change-url a:hover{ color: var(--berry); }
   .hidden{ display:none !important; }
   .spinner{ text-align:center; padding: 30px 0; color: var(--ink-muted); font-size:13px; }
+  .spinner i{ font-size:20px; margin-bottom:8px; display:block; color: var(--berry); }
 
   .modal-overlay{
     position:fixed; inset:0; background:rgba(59,42,32,0.45); display:flex;
     align-items:center; justify-content:center; padding:16px; z-index:50;
+    animation: fadeIn .2s ease both;
   }
-  .modal-box{ background:#fff; border-radius:16px; padding:20px; width:100%; max-width:380px; }
+  .modal-box{ background:#fff; border-radius:16px; padding:20px; width:100%; max-width:380px; animation: scaleIn .25s cubic-bezier(.34,1.56,.64,1) both; }
   .modal-box h3{ margin:0 0 12px; font-size:16px; }
   .modal-box label{ font-size:13px; font-weight:600; display:block; margin-bottom:6px; }
   .modal-box input{
     width:100%; padding:10px 12px; border-radius:10px; border:1px solid #E8D9CE;
-    font-size:14px; margin-bottom:10px;
+    font-size:14px; margin-bottom:10px; transition: border-color .2s ease, box-shadow .2s ease;
   }
+  .modal-box input:focus{ outline:none; border-color: var(--berry); box-shadow: 0 0 0 3px var(--berry-light); }
   .modal-actions{ display:flex; gap:8px; margin-top:6px; }
-  .modal-actions button{ flex:1; padding:10px; border-radius:10px; border:none; font-weight:700; font-size:13px; cursor:pointer; }
+  .modal-actions button{ flex:1; padding:10px; border-radius:10px; border:none; font-weight:700; font-size:13px; cursor:pointer; transition: transform .15s ease, opacity .2s ease; }
+  .modal-actions button:hover{ opacity:.9; transform: translateY(-1px); }
+  .modal-actions button:active{ transform: translateY(0) scale(.97); }
   .modal-actions .save-btn{ background: var(--berry); color:#fff; }
   .modal-actions .cancel-btn{ background:#F1E6DC; color: var(--cocoa); }
 
@@ -132,14 +156,19 @@
   .status-pill.shortage{ background:#FBE7E9; color: var(--danger); }
   .status-pill.excess{ background:#FDF1DE; color: var(--caramel-dark); }
   .status-pill.unavailable{ background:#F1E6DC; color: var(--ink-muted); }
-  .stat.cashdrawer .value{ color:#3B7EA1; }
-  .stat.expense .value{ color: var(--danger); }
+  .stat.cashdrawer .icon, .stat.cashdrawer .value{ color:#3B7EA1; }
+  .stat.innerdrawer .icon, .stat.innerdrawer .value{ color:#6E4A9E; }
+  .stat.handover .icon, .stat.handover .value{ color:#3F9A5C; }
+  .stat.expense .icon, .stat.expense .value{ color: var(--danger); }
+  .stat.wastage .icon, .stat.wastage .value{ color: var(--danger); }
   .unavailable-note{ font-size:11px; color: var(--ink-muted); margin-top:2px; }
   .view-summary-btn{
     width:100%; padding:12px; border-radius:12px; border:none; margin-top:6px;
     background: var(--cocoa); color:#fff; font-weight:700; font-size:14px; cursor:pointer;
+    transition: background .2s ease, transform .15s ease; display:flex; align-items:center; justify-content:center; gap:8px;
   }
-  .view-summary-btn:hover{ background:#241a13; }
+  .view-summary-btn:hover{ background:#241a13; transform: translateY(-1px); }
+  .view-summary-btn:active{ transform: translateY(0) scale(.98); }
 
   .day-summary-modal .modal-box{ max-width: 420px; max-height:88vh; overflow-y:auto; }
   .receipt-80mm{
@@ -161,23 +190,126 @@
   .receipt-80mm .r-gst-head{ font-weight:800; font-size:12.5px; border-bottom:1.5px dashed #000; padding-bottom:2px; margin-bottom:3px; }
   .receipt-80mm .r-denom-head{ font-weight:800; font-size:12.5px; margin-top:4px; }
   .day-summary-actions{ display:flex; gap:8px; margin-top:14px; }
-  .day-summary-actions button{ flex:1; padding:10px; border-radius:10px; border:none; font-weight:700; font-size:13px; cursor:pointer; }
+  .day-summary-actions button{ flex:1; padding:10px; border-radius:10px; border:none; font-weight:700; font-size:13px; cursor:pointer; transition: transform .15s ease, opacity .2s ease; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .day-summary-actions button:hover{ opacity:.9; transform: translateY(-1px); }
   .day-summary-actions .print-btn{ background: var(--berry); color:#fff; }
   .day-summary-actions .close-btn{ background:#F1E6DC; color: var(--cocoa); }
+
+  @keyframes fadeInUp{
+    from{ opacity:0; transform: translateY(10px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+  @keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
+  @keyframes scaleIn{ from{ opacity:0; transform: scale(.92); } to{ opacity:1; transform: scale(1); } }
+  @keyframes popIn{ 0%{ opacity:0; transform: scale(.6) rotate(-8deg); } 100%{ opacity:1; transform: scale(1) rotate(0); } }
+  @keyframes valuePop{ 0%{ transform: scale(1); } 40%{ transform: scale(1.08); } 100%{ transform: scale(1); } }
+
+  /* stagger the stat cards a touch so the dashboard doesn't feel like it "dumped" all at once */
+  .grid .stat:nth-child(1){ animation-delay: .02s; }
+  .grid .stat:nth-child(2){ animation-delay: .06s; }
+  .grid .stat:nth-child(3){ animation-delay: .10s; }
+  .grid .stat:nth-child(4){ animation-delay: .14s; }
+  .grid .stat:nth-child(5){ animation-delay: .18s; }
+
   .hidden {
   display: none !important;
 }
-#gearBtn {
-  display: none !important;
-  pointer-events: none !important;
-}
+
+  /* --- Drill-down clickable cards ------------------------------------- */
+  .drill-card{ cursor:pointer; position:relative; }
+  .drill-card:hover{ transform: translateY(-3px) scale(1.015); box-shadow: 0 12px 26px rgba(139,41,66,0.16); }
+  .drill-card:active{ transform: translateY(-1px) scale(.99); }
+  .drill-card:focus-visible{ outline: 2px solid var(--berry); outline-offset: 2px; }
+  .drill-card::after{
+    content: '\f105'; font-family:"Font Awesome 6 Free"; font-weight:900;
+    position:absolute; top:10px; right:10px; font-size:11px; color: var(--ink-muted);
+    opacity:.55; transition: opacity .2s ease, transform .2s ease;
+  }
+  .drill-card:hover::after{ opacity:1; transform: translateX(2px); }
+
+  /* --- Records drill-down modal ---------------------------------------- */
+  .records-overlay{
+    position:fixed; inset:0; background:rgba(59,42,32,0.5); z-index:60;
+    display:flex; align-items:center; justify-content:center; padding:14px;
+    animation: fadeIn .18s ease both;
+  }
+  .records-box{
+    background:#fff; border-radius:18px; width:100%; max-width:760px; max-height:90vh;
+    display:flex; flex-direction:column; overflow:hidden;
+    animation: scaleIn .22s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .records-header{ padding:16px 18px 12px; border-bottom:1px solid #F1E6DC; flex-shrink:0; }
+  .records-header-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .records-header h3{ margin:0; font-size:16px; color: var(--cocoa); }
+  .records-header .records-meta{ font-size:12.5px; color: var(--ink-muted); margin-top:3px; }
+  .records-header .records-total{ font-weight:800; color: var(--berry); }
+  .records-close-btn{
+    background:#F1E6DC; border:none; border-radius:10px; width:32px; height:32px; flex-shrink:0;
+    font-size:14px; color: var(--cocoa); cursor:pointer; transition: background .2s ease;
+  }
+  .records-close-btn:hover{ background:#E8D9CE; }
+  .records-search{
+    margin-top:10px; width:100%; padding:9px 12px; border-radius:10px; border:1px solid #E8D9CE;
+    font-size:13px; transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  .records-search:focus{ outline:none; border-color: var(--berry); box-shadow: 0 0 0 3px var(--berry-light); }
+  .records-body{ overflow:auto; flex:1; -webkit-overflow-scrolling: touch; }
+  .records-table-wrap{ overflow-x:auto; }
+  table.records-table{ width:100%; border-collapse:collapse; font-size:12.5px; white-space:nowrap; }
+  table.records-table thead th{
+    position:sticky; top:0; background:#FBEEDD; text-align:left; padding:9px 10px;
+    font-weight:700; color: var(--cocoa); border-bottom:1px solid #E8D9CE; z-index:1;
+  }
+  table.records-table tbody td{ padding:9px 10px; border-bottom:1px solid #F5EBE1; color: var(--cocoa); }
+  table.records-table tbody tr{ cursor:pointer; transition: background .15s ease; }
+  table.records-table tbody tr:hover{ background: var(--cream-deep); }
+  table.records-table tbody tr:active{ background: var(--berry-light); }
+  .records-empty{ text-align:center; padding: 40px 20px; color: var(--ink-muted); font-size:13.5px; }
+  .records-empty i{ font-size:22px; display:block; margin-bottom:10px; color:#D9C6B8; }
+  .records-footer{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:12px 18px; border-top:1px solid #F1E6DC; flex-shrink:0; font-size:12.5px; color: var(--ink-muted);
+  }
+  .records-footer .records-footer-total{ font-weight:800; color: var(--berry); font-size:14px; }
+  .records-footer-close{
+    padding:8px 16px; border-radius:10px; border:none; background: var(--cocoa); color:#fff;
+    font-weight:700; font-size:13px; cursor:pointer; transition: background .2s ease;
+  }
+  .records-footer-close:hover{ background:#241a13; }
+
+  /* Row detail sub-modal */
+  .record-detail-overlay{
+    position:fixed; inset:0; background:rgba(59,42,32,0.55); z-index:70;
+    display:flex; align-items:center; justify-content:center; padding:16px;
+    animation: fadeIn .18s ease both;
+  }
+  .record-detail-box{
+    background:#fff; border-radius:16px; padding:18px; width:100%; max-width:380px; max-height:80vh; overflow-y:auto;
+    animation: scaleIn .22s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .record-detail-box h4{ margin:0 0 12px; font-size:15px; color: var(--berry); }
+  .record-detail-row{ display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid #F5EBE1; font-size:13px; }
+  .record-detail-row:last-of-type{ border-bottom:none; }
+  .record-detail-row .rd-label{ color: var(--ink-muted); font-weight:600; }
+  .record-detail-row .rd-value{ text-align:right; color: var(--cocoa); font-weight:600; word-break:break-word; }
+  .record-detail-close{
+    width:100%; margin-top:14px; padding:10px; border-radius:10px; border:none;
+    background:#F1E6DC; color: var(--cocoa); font-weight:700; font-size:13px; cursor:pointer;
+  }
+
+  @media (max-width: 640px){
+    .records-box{ max-width:100%; max-height:96vh; border-radius:14px 14px 0 0; align-self:flex-end; }
+    .records-overlay{ align-items:flex-end; padding:0; }
+    table.records-table{ font-size:12px; }
+  }
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <button class="gear-btn hidden" id="gearBtn" title="Change Password">⚙</button>
-    <div class="emoji">🎂</div>
+    <button class="gear-btn hidden" id="gearBtn" title="Change Password"><i class="fa-solid fa-gear"></i></button>
+    <div class="emoji"><i class="fa-solid fa-cake-candles"></i></div>
     <h1><span class="shop-name" id="shopNameLabel">Laava Dashboard</span></h1>
     <div class="date" id="dateLabel">—</div>
   </header>
@@ -192,12 +324,12 @@
   </div>
 
   <div id="errorBox" class="error-box hidden"></div>
-  <div id="loadingBox" class="spinner hidden">Loading sales…</div>
+  <div id="loadingBox" class="spinner hidden"><i class="fa-solid fa-spinner fa-spin"></i>Loading sales…</div>
 
   <div class="filter-bar hidden" id="filterBar">
     <button class="filter-btn active" id="btnToday" data-range="today">Today</button>
     <button class="filter-btn" id="btnYesterday" data-range="yesterday">Yesterday</button>
-    <button class="filter-btn" id="btnCustom" data-range="custom">📅 Pick Date</button>
+    <button class="filter-btn" id="btnCustom" data-range="custom"><i class="fa-solid fa-calendar-days"></i> Pick Date</button>
   </div>
   <input type="date" id="customDateInput" class="hidden">
 
@@ -213,18 +345,18 @@
 
     <div class="section-label">Sales Breakdown</div>
     <div class="grid cols-3">
-      <div class="stat takeaway">
-        <div class="icon">🥡</div>
+      <div class="stat takeaway drill-card" data-drill="takeaway" tabindex="0" role="button" aria-label="View Takeaway Bills">
+        <div class="icon"><i class="fa-solid fa-bag-shopping"></i></div>
         <div class="label">Total Takeaway</div>
         <div class="value" id="takeAwayVal">₹0.00</div>
       </div>
-      <div class="stat dining">
-        <div class="icon">🍽️</div>
+      <div class="stat dining drill-card" data-drill="dining" tabindex="0" role="button" aria-label="View Dining Sales">
+        <div class="icon"><i class="fa-solid fa-utensils"></i></div>
         <div class="label">Today's Dining</div>
         <div class="value" id="diningVal">₹0.00</div>
       </div>
-      <div class="stat order">
-        <div class="icon">🎂</div>
+      <div class="stat order drill-card" data-drill="order" tabindex="0" role="button" aria-label="View Orders">
+        <div class="icon"><i class="fa-solid fa-cake-candles"></i></div>
         <div class="label">Today's Order</div>
         <div class="value" id="orderVal">₹0.00</div>
         <div class="sub" id="orderSubVal"></div>
@@ -233,44 +365,62 @@
 
     <div class="section-label">Payment Methods</div>
     <div class="grid cols-3">
-      <div class="stat cash">
-        <div class="icon">💵</div>
+      <div class="stat cash drill-card" data-drill="cash" tabindex="0" role="button" aria-label="View Cash Transactions">
+        <div class="icon"><i class="fa-solid fa-money-bill-wave"></i></div>
         <div class="label">Total Cash</div>
         <div class="value" id="cashVal">₹0.00</div>
       </div>
-      <div class="stat upi">
-        <div class="icon">📱</div>
+      <div class="stat upi drill-card" data-drill="upi" tabindex="0" role="button" aria-label="View UPI Transactions">
+        <div class="icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
         <div class="label">Today's UPI</div>
         <div class="value" id="upiVal">₹0.00</div>
       </div>
-      <div class="stat card">
-        <div class="icon">💳</div>
+      <div class="stat card drill-card" data-drill="card" tabindex="0" role="button" aria-label="View Card Transactions">
+        <div class="icon"><i class="fa-solid fa-credit-card"></i></div>
         <div class="label">Today's Card</div>
         <div class="value" id="cardVal">₹0.00</div>
       </div>
     </div>
 
-    <div class="section-label">Cash Drawer &amp; Expenses</div>
-    <div class="grid">
+    <div class="section-label">Cash Drawer, Expenses &amp; Wastage</div>
+    <div class="grid cols-3">
       <div class="stat cashdrawer">
-        <div class="icon">🗄️</div>
+        <div class="icon"><i class="fa-solid fa-cash-register"></i></div>
         <div class="label">Cash Drawer</div>
         <div class="value" id="cashDrawerVal">—</div>
         <div id="cashDrawerSub" class="unavailable-note"></div>
       </div>
-      <div class="stat expense">
-        <div class="icon">🧾</div>
+      <div class="stat expense drill-card" data-drill="expense" tabindex="0" role="button" aria-label="View Expense Records">
+        <div class="icon"><i class="fa-solid fa-receipt"></i></div>
         <div class="label">Today's Expense</div>
         <div class="value" id="expenseVal">—</div>
         <div id="expenseSub" class="unavailable-note"></div>
       </div>
+      <div class="stat innerdrawer">
+        <div class="icon"><i class="fa-solid fa-lock"></i></div>
+        <div class="label">Inner Drawer Cash</div>
+        <div class="value" id="innerDrawerVal">—</div>
+        <div id="innerDrawerSub" class="unavailable-note"></div>
+      </div>
+      <div class="stat handover">
+        <div class="icon"><i class="fa-solid fa-handshake"></i></div>
+        <div class="label">Handover Cash</div>
+        <div class="value" id="handoverVal">—</div>
+        <div id="handoverSub" class="unavailable-note"></div>
+      </div>
+      <div class="stat wastage drill-card" data-drill="wastage" tabindex="0" role="button" aria-label="View Wastage Records">
+        <div class="icon"><i class="fa-solid fa-trash"></i></div>
+        <div class="label">Today's Wastage</div>
+        <div class="value" id="wastageVal">—</div>
+        <div id="wastageSub" class="unavailable-note"></div>
+      </div>
     </div>
 
-    <button class="view-summary-btn" id="viewDaySummaryBtn">📋 View Day Summary Report</button>
+    <button class="view-summary-btn" id="viewDaySummaryBtn"><i class="fa-solid fa-clipboard-list"></i> View Day Summary Report</button>
 
     <div class="footer-row">
       <span class="updated" id="updatedLabel">Updated —</span>
-      <button class="icon-btn" id="refreshBtn">↻ Refresh</button>
+      <button class="icon-btn" id="refreshBtn"><i class="fa-solid fa-arrows-rotate" id="refreshIcon"></i> Refresh</button>
     </div>
   </div>
 
@@ -304,9 +454,49 @@
   <div class="modal-box">
     <div id="daySummaryReceipt"></div>
     <div class="day-summary-actions">
-      <button class="close-btn" id="daySummaryCloseBtn">Close</button>
-      <button class="print-btn" id="daySummaryPrintBtn">🖨 Print</button>
+      <button class="close-btn" id="daySummaryCloseBtn"><i class="fa-solid fa-xmark"></i> Close</button>
+      <button class="print-btn" id="daySummaryPrintBtn"><i class="fa-solid fa-print"></i> Print</button>
     </div>
+  </div>
+</div>
+
+<div id="recordsModalOverlay" class="records-overlay hidden">
+  <div class="records-box">
+    <div class="records-header">
+      <div class="records-header-top">
+        <div>
+          <h3 id="recordsTitle">Records</h3>
+          <div class="records-meta"><span id="recordsCountLabel">0 Records</span> · <span class="records-total" id="recordsTotalLabel">Total ₹0.00</span></div>
+        </div>
+        <button class="records-close-btn" id="recordsCloseBtnTop" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input type="text" id="recordsSearchInput" class="records-search" placeholder="Search records…">
+    </div>
+    <div class="records-body">
+      <div class="records-table-wrap">
+        <table class="records-table" id="recordsTable">
+          <thead><tr id="recordsTableHead"></tr></thead>
+          <tbody id="recordsTableBody"></tbody>
+        </table>
+      </div>
+      <div class="records-empty hidden" id="recordsEmptyState">
+        <i class="fa-solid fa-inbox"></i>
+        No records found for the selected date/filter.
+      </div>
+    </div>
+    <div class="records-footer">
+      <span id="recordsFooterCount">0 records</span>
+      <span class="records-footer-total" id="recordsFooterTotal">₹0.00</span>
+      <button class="records-footer-close" id="recordsCloseBtnBottom">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="recordDetailOverlay" class="record-detail-overlay hidden">
+  <div class="record-detail-box">
+    <h4 id="recordDetailTitle">Record Details</h4>
+    <div id="recordDetailBody"></div>
+    <button class="record-detail-close" id="recordDetailCloseBtn">Close</button>
   </div>
 </div>
 
@@ -316,7 +506,13 @@
   var REFRESH_MS = 30000; 
 
   var OWNER_ID = 'laavacakes';
-  var OWNER_PASSWORD = 'laava7774';
+  // NOTE: there is deliberately no local OWNER_PASSWORD constant. The
+  // password is verified server-side (Google Apps Script) on every
+  // request via the `pass` query param — see buildQuery()/fetchByRange().
+  // A local hardcoded password used to exist here and caused a bug: after
+  // changing the password via the gear icon, only the ORIGINAL default
+  // password would still work on the Unlock screen, because the unlock
+  // check compared against this constant instead of asking the server.
 
   var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbztypHyEta6HNC0KZfgqg1VfA3JCjRWvf8lT7ojfq6uI64S1aH50yBl9G4ytlBe5wq9BA/exec';
 
@@ -328,11 +524,19 @@
   var filterBar = document.getElementById('filterBar');
   var customDateInput = document.getElementById('customDateInput');
   var gearBtn = document.getElementById('gearBtn');
+  var refreshIcon = document.getElementById('refreshIcon');
   var timer = null;
 
   var currentRange = 'today';
   var shopToday = null; 
   var lastSummary = null; 
+  var dashboardRevealed = false;
+
+  // --- Speed: in-memory cache keyed by range/date. When a filter is
+  // reselected (or auto-refresh ticks) we render the cached numbers
+  // instantly and silently refetch in the background, so the dashboard
+  // never has to sit on a blocking spinner for data it already has.
+  var dataCache = {};
 
   function getSavedUrl() { return SCRIPT_URL; }
   function getSavedPass() { try { return localStorage.getItem(PASS_KEY) || ''; } catch (e) { return ''; } }
@@ -342,6 +546,19 @@
   function fmtMoney(n) {
     var v = Number(n || 0);
     return '₹' + v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function round2(n) { return Math.round(Number(n || 0) * 100) / 100; }
+
+  // The Apps Script backend normally sends diffStatus as a plain string
+  // ('shortage' / 'excess' / 'match'), but a stray Sheets cell type
+  // (e.g. a Date or boolean landing in that column) can hand back a
+  // non-string value. Coercing here means a formatting quirk on the
+  // sheet can never crash the dashboard render.
+  function diffStatusText(val) {
+    if (val === null || val === undefined) return '';
+    var s = String(val);
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
   }
 
   function escapeHtml(s) {
@@ -397,7 +614,19 @@
     return 'Selected Day\u2019s';
   }
 
-  function render(summary) {
+  // Bumps a value element with a tiny pop animation when its number
+  // actually changed, so a background refresh is felt, not just seen.
+  function setValueAnimated(el, text, changed) {
+    el.textContent = text;
+    if (changed) {
+      el.classList.remove('bump');
+      // force reflow so the animation can replay on rapid updates
+      void el.offsetWidth;
+      el.classList.add('bump');
+    }
+  }
+
+  function render(summary, fromCache) {
     document.getElementById('shopNameLabel').textContent = summary.shopName || 'Owner Dashboard';
     document.getElementById('dateLabel').textContent = summary.date || '';
 
@@ -405,28 +634,30 @@
     var orderTotal = orderTotalOf(summary);
 
     document.getElementById('totalBillLabel').textContent = rangeLabel() + ' Total Sale';
-    document.getElementById('totalSalesVal').textContent = fmtMoney(grandTotal);
+    var totalEl = document.getElementById('totalSalesVal');
+    var totalChanged = totalEl.textContent !== fmtMoney(grandTotal);
+    setValueAnimated(totalEl, fmtMoney(grandTotal), totalChanged && !!lastSummary);
     document.getElementById('billsCountVal').textContent = (summary.bills || 0) + ' bill' + (summary.bills === 1 ? '' : 's') + ' settled';
 
-    document.getElementById('takeAwayVal').textContent = fmtMoney(summary.takeAwayTotal);
-    document.getElementById('diningVal').textContent = fmtMoney(summary.diningTotal);
-    document.getElementById('orderVal').textContent = fmtMoney(orderTotal);
+    setValueAnimated(document.getElementById('takeAwayVal'), fmtMoney(summary.takeAwayTotal), false);
+    setValueAnimated(document.getElementById('diningVal'), fmtMoney(summary.diningTotal), false);
+    setValueAnimated(document.getElementById('orderVal'), fmtMoney(orderTotal), false);
     document.getElementById('orderSubVal').textContent =
       'Adv ' + fmtMoney(summary.advancePaid) + ' + Bal ' + fmtMoney(summary.balancePaid) +
       (summary.todayOrders ? ' · ' + summary.todayOrders + ' order' + (summary.todayOrders === 1 ? '' : 's') : '');
 
-    document.getElementById('cashVal').textContent = fmtMoney(summary.cash);
-    document.getElementById('upiVal').textContent = fmtMoney(summary.upi);
-    document.getElementById('cardVal').textContent = fmtMoney(summary.card);
+    setValueAnimated(document.getElementById('cashVal'), fmtMoney(summary.cash), false);
+    setValueAnimated(document.getElementById('upiVal'), fmtMoney(summary.upi), false);
+    setValueAnimated(document.getElementById('cardVal'), fmtMoney(summary.card), false);
 
-    document.getElementById('updatedLabel').textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN');
+    document.getElementById('updatedLabel').textContent = (fromCache ? 'Cached ' : 'Updated ') + new Date().toLocaleTimeString('en-IN');
 
     var cd = summary.cashDrawer;
     var cashDrawerValEl = document.getElementById('cashDrawerVal');
     var cashDrawerSubEl = document.getElementById('cashDrawerSub');
     if (cd) {
-      var statusText = cd.status === 'open' ? 'Open' : (cd.diffStatus ? cd.diffStatus.charAt(0).toUpperCase() + cd.diffStatus.slice(1) : '-');
-      var pillClass = cd.status === 'open' ? 'open' : (cd.diffStatus || 'unavailable');
+      var statusText = cd.status === 'open' ? 'Open' : (cd.diffStatus ? diffStatusText(cd.diffStatus) : '-');
+      var pillClass = cd.status === 'open' ? 'open' : (typeof cd.diffStatus === 'string' && cd.diffStatus ? cd.diffStatus : 'unavailable');
       cashDrawerValEl.innerHTML = fmtMoney(cd.status === 'open' ? cd.openingCash : cd.actualCash) +
         ' <span class="status-pill ' + pillClass + '">' + escapeHtml(statusText) + '</span>';
       cashDrawerSubEl.textContent = cd.status === 'open'
@@ -448,6 +679,43 @@
       expenseSubEl.textContent = 'No expenses recorded for this date yet.';
     }
 
+    // Inner Drawer Cash / Handover Cash — same cd (Cash Drawer session)
+    // used above. Both are only known once the drawer has been CLOSED
+    // for the day (they're null while a session is still open, same as
+    // js/cash-drawer.js), so an open/missing session shows the same
+    // "Not set up" pill as the other cards instead of a stray ₹0.00.
+    var innerDrawerValEl = document.getElementById('innerDrawerVal');
+    var innerDrawerSubEl = document.getElementById('innerDrawerSub');
+    var handoverValEl = document.getElementById('handoverVal');
+    var handoverSubEl = document.getElementById('handoverSub');
+    if (cd && cd.status === 'closed' && cd.innerDrawerCash != null) {
+      innerDrawerValEl.textContent = fmtMoney(cd.innerDrawerCash);
+      innerDrawerSubEl.textContent = 'Kept inside the drawer';
+    } else {
+      innerDrawerValEl.innerHTML = '<span class="status-pill unavailable">' + (cd && cd.status === 'open' ? 'Drawer open' : 'Not set up') + '</span>';
+      innerDrawerSubEl.textContent = cd && cd.status === 'open' ? 'Known once the drawer is closed today.' : 'No closing recorded for this date yet.';
+    }
+    if (cd && cd.status === 'closed' && cd.handoverCash != null) {
+      handoverValEl.textContent = fmtMoney(cd.handoverCash);
+      handoverSubEl.textContent = 'Handed over by ' + (cd.staffName || '-');
+    } else {
+      handoverValEl.innerHTML = '<span class="status-pill unavailable">' + (cd && cd.status === 'open' ? 'Drawer open' : 'Not set up') + '</span>';
+      handoverSubEl.textContent = cd && cd.status === 'open' ? 'Known once the drawer is closed today.' : 'No closing recorded for this date yet.';
+    }
+
+    // Wastage — kept fully separate from Total Sale above; never
+    // subtracted from it.
+    var wst = summary.wastages;
+    var wastageValEl = document.getElementById('wastageVal');
+    var wastageSubEl = document.getElementById('wastageSub');
+    if (wst) {
+      wastageValEl.textContent = fmtMoney(wst.total);
+      wastageSubEl.textContent = (wst.items ? wst.items.length : 0) + ' item' + ((wst.items && wst.items.length === 1) ? '' : 's') + ' wasted' + (wst.quantity ? ' · Qty ' + wst.quantity : '');
+    } else {
+      wastageValEl.innerHTML = '<span class="status-pill unavailable">Not set up</span>';
+      wastageSubEl.textContent = 'No wastage recorded for this date yet.';
+    }
+
     if (currentRange === 'today') shopToday = summary.date;
     lastSummary = summary;
 
@@ -458,6 +726,7 @@
     filterBar.classList.remove('hidden');
     changeUrlRow.classList.remove('hidden');
     gearBtn.classList.remove('hidden');
+    dashboardRevealed = true;
   }
 
   function buildQuery(extra) {
@@ -471,25 +740,28 @@
   function fetchByRange(range, showLoading) {
     var url = getSavedUrl();
     if (!url || !getSavedPass()) { setupCard.classList.remove('hidden'); dashboard.classList.add('hidden'); filterBar.classList.add('hidden'); return; }
-    if (showLoading) loadingBox.classList.remove('hidden');
 
     currentRange = range;
     document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
 
-    var fetchUrl;
+    var fetchUrl, cacheKey;
     if (range === 'today') {
       document.getElementById('btnToday').classList.add('active');
       customDateInput.classList.add('hidden');
       fetchUrl = buildQuery({ action: 'today' });
+      cacheKey = 'today';
     } else if (range === 'yesterday') {
       document.getElementById('btnYesterday').classList.add('active');
       customDateInput.classList.add('hidden');
       if (shopToday) {
-        fetchUrl = buildQuery({ date: addDaysToDateStr(shopToday, -1) });
+        var yDate = addDaysToDateStr(shopToday, -1);
+        fetchUrl = buildQuery({ date: yDate });
+        cacheKey = 'date:' + yDate;
       } else {
         fetch(buildQuery({ action: 'today' })).then(function (res) { return res.json(); }).then(function (data) {
           if (data && data.ok) {
             shopToday = data.date;
+            dataCache['today'] = data;
             fetchByRange('yesterday', showLoading);
           } else {
             handleResponse(data);
@@ -503,10 +775,29 @@
       var picked = customDateInput.value || (shopToday || new Date().toISOString().substring(0, 10));
       customDateInput.value = picked;
       fetchUrl = buildQuery({ date: picked });
+      cacheKey = 'date:' + picked;
     }
 
-    fetch(fetchUrl).then(function (res) { return res.json(); }).then(handleResponse)
-      .catch(function (err) { showError('Could not load sales. Check your internet connection, then tap Refresh. (' + err.message + ')'); });
+    // Instant paint from cache (stale-while-revalidate) — the numbers the
+    // owner already saw for this filter show immediately, no spinner,
+    // while a fresh copy loads quietly underneath.
+    var cached = dataCache[cacheKey];
+    if (cached) {
+      render(cached, true);
+    } else if (showLoading) {
+      loadingBox.classList.remove('hidden');
+    }
+
+    if (refreshIcon) refreshIcon.classList.add('fa-spin');
+
+    fetch(fetchUrl).then(function (res) { return res.json(); }).then(function (data) {
+      if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+      if (data && data.ok !== false) { dataCache[cacheKey] = data; }
+      handleResponse(data);
+    }).catch(function (err) {
+      if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+      if (!cached) showError('Could not load sales. Check your internet connection, then tap Refresh. (' + err.message + ')');
+    });
   }
 
   function handleResponse(data) {
@@ -519,17 +810,29 @@
         showError('Incorrect owner password. Please enter it again.');
         return;
       }
-      showError((data && (data.message || data.error)) || 'Something went wrong.');
+      if (!dashboardRevealed) showError((data && (data.message || data.error)) || 'Something went wrong.');
       return;
     }
-    render(data);
+    render(data, false);
   }
 
   document.getElementById('unlockBtn').addEventListener('click', function () {
     var id = document.getElementById('idInput').value.trim();
     var pass = document.getElementById('passInput').value;
     if (!id || !pass) { showError('Please enter your Owner ID and Password.'); return; }
-    if (id !== OWNER_ID || pass !== OWNER_PASSWORD) { showError('Incorrect Owner ID or Password.'); return; }
+    // BUGFIX: this used to also check `pass !== OWNER_PASSWORD` against the
+    // hardcoded default constant above. That made the Unlock screen reject
+    // ANY password that wasn't the original default — including a password
+    // the owner had legitimately changed via the gear icon — because the
+    // hardcoded constant is never updated when the password is changed.
+    // The Owner ID is fixed/never changes, so it's still fine to check
+    // locally, but the actual password must be verified against the real,
+    // current password on the server (Google Apps Script), exactly the
+    // same way every dashboard refresh already verifies it via the `pass`
+    // query param. If it's wrong, the server responds with
+    // { ok:false, error:'unauthorized' }, which handleResponse() below
+    // already catches and turns into "Incorrect owner password."
+    if (id !== OWNER_ID) { showError('Incorrect Owner ID or Password.'); return; }
     savePass(pass);
     fetchByRange('today', true);
     startAutoRefresh();
@@ -617,36 +920,86 @@
   function statusLabel(cd) {
     if (!cd) return '-';
     if (cd.status === 'open') return 'Open';
-    if (cd.diffStatus) return cd.diffStatus.charAt(0).toUpperCase() + cd.diffStatus.slice(1);
+    if (cd.diffStatus) return diffStatusText(cd.diffStatus);
     return '-';
   }
 
+  // Handover Denominations aren't always sent by the Apps Script backend
+  // (older synced sessions may not carry the Inner Drawer breakdown), so
+  // derive them the same way the POS's Cash Drawer module does:
+  // handover note qty = closing note qty − inner-drawer note qty.
+  function computeHandoverDenoms(actualDenoms, innerDenoms) {
+    var o = {};
+    DENOMS.forEach(function (d) {
+      var qty = (Number((actualDenoms || {})[d]) || 0) - (Number((innerDenoms || {})[d]) || 0);
+      o[d] = qty > 0 ? qty : 0;
+    });
+    return o;
+  }
+
+  // Same field order / labelling as the POS's own "Day Summary" thermal
+  // receipt (js/print.js -> buildDaySummaryHtml), so the Owner Page report
+  // reads identically to the one printed at the counter.
   function buildDaySummaryReceiptHtml(summary) {
     var cd = summary.cashDrawer || null;
     var exp = summary.expenses || { total: 0, items: [] };
     var cashExpense = Number((exp && exp.cash) || 0);
-    var grandTotal = grandTotalOf(summary);
-    var orderTotal = orderTotalOf(summary);
+    var wst = summary.wastages || { total: 0, items: [] };
+
+    // Total Sales = Dining + Take Away + Order Advance (matches the POS's
+    // own "Total Sales" figure on the Day Summary report, which uses the
+    // order Advance rather than the full order total — Order Balance is
+    // shown as its own line below).
+    var totalSales = Number(summary.diningTotal || 0) +
+      Number(summary.takeAwayTotal || 0) +
+      Number(summary.advancePaid || 0);
+
+    var openingCash = cd ? Number(cd.openingCash || 0) : 0;
+    var totalCashSales = Number(summary.cash || 0);
+
+    // --- Resolve Inner Drawer Cash / Handover Cash / Overall Actual Cash
+    // with fallbacks. Some synced Cash Drawer sessions only carry the
+    // denomination breakdown (or predate the Inner/Handover columns
+    // entirely), so a raw cd.innerDrawerCash / cd.handoverCash of null
+    // doesn't necessarily mean the figure is unknown — work it out from
+    // whatever is actually available before giving up and showing "-".
+    var hasInnerDenoms = !!(cd && cd.innerDrawerDenoms && Object.keys(cd.innerDrawerDenoms).length);
+
+    var innerCash = (cd && cd.innerDrawerCash != null) ? Number(cd.innerDrawerCash)
+      : (hasInnerDenoms ? denomTotal(cd.innerDrawerDenoms) : null);
+
+    // Overall Actual Cash: prefer the manually-counted figure the staff
+    // entered at closing; fall back to Opening + Cash Sales − Cash Expense
+    // (the same "expected cash" formula the POS's Cash Drawer uses) only
+    // when the counted figure itself never made it into the sync data.
+    var actualCash = (cd && cd.actualCash != null) ? Number(cd.actualCash)
+      : (cd ? round2(openingCash + totalCashSales - cashExpense) : null);
+
+    var handoverCash = (cd && cd.handoverCash != null) ? Number(cd.handoverCash)
+      : (cd && cd.handoverDenoms ? denomTotal(cd.handoverDenoms)
+      : ((cd && innerCash != null && actualCash != null) ? round2(actualCash - innerCash) : null));
 
     var infoLines = [
       'Date : ' + (summary.date || '-'),
-      'Time : ' + new Date().toLocaleString('en-IN'),
+      'Print Time : ' + new Date().toLocaleString('en-IN'),
       cd && cd.staffName ? 'Staff : ' + escapeHtml(cd.staffName) : null,
       'Open Draw : ' + (cd && cd.openingTime ? new Date(cd.openingTime).toLocaleString('en-IN') : '-'),
       'Open Draw Amount : ' + fmtMoney(cd ? cd.openingCash : 0),
       'Expense Cash : ' + (cashExpense > 0 ? '-' : '') + fmtMoney(cashExpense),
       'Close Draw : ' + (cd && cd.closingTime ? new Date(cd.closingTime).toLocaleString('en-IN') : '-'),
-      'Close Draw Amount : ' + (cd && cd.actualCash != null ? fmtMoney(cd.actualCash) : '-'),
+      'Overall Actual Cash : ' + (actualCash != null ? fmtMoney(actualCash) : '-'),
+      'Inner Drawer Cash : ' + (innerCash != null ? fmtMoney(innerCash) : '-'),
+      'Handover Cash : ' + (handoverCash != null ? fmtMoney(handoverCash) : '-'),
       'Status : ' + escapeHtml(statusLabel(cd)),
       'Difference : ' + (cd && cd.difference != null ? (cd.difference >= 0 ? '+' : '') + fmtMoney(cd.difference) : '-')
     ].filter(function (l) { return l != null; });
 
     var orderRows = [
-      ['Take Away Total', fmtMoney(summary.takeAwayTotal)],
-      ['Dining Total', fmtMoney(summary.diningTotal)],
-      ['Order Total (Adv+Bal)', fmtMoney(orderTotal)],
-      ['  Order Advance', fmtMoney(summary.advancePaid)],
-      ['  Order Balance', fmtMoney(summary.balancePaid)]
+      ['Total Sales', fmtMoney(totalSales), true],
+      ['Total Dining', fmtMoney(summary.diningTotal)],
+      ['Total Takeaway', fmtMoney(summary.takeAwayTotal)],
+      ['Total Order Advance', fmtMoney(summary.advancePaid)],
+      ['Total Order Balance', fmtMoney(summary.balancePaid)]
     ];
 
     var paymentRows = [
@@ -654,8 +1007,41 @@
       ['Total UPI Sales', fmtMoney(summary.upi)],
       ['Total Card Sales', fmtMoney(summary.card)],
       ["Today's Expense (Cash)", '- ' + fmtMoney(cashExpense)],
-      ["Today's Expense (Total)", fmtMoney(exp.total)]
+      ["Today's Expense (Total)", fmtMoney(exp.total), true]
     ];
+
+    var innerDenomHtml = cd ? denomTableHtml('Inner Drawer Cash Denominations', cd.innerDrawerDenoms) : '';
+    // Overall Closing Cash Denominations — the raw note-by-note count
+    // taken at closing, before it's split into Inner Drawer / Handover.
+    // This was being computed internally (as the base for Handover) but
+    // never actually shown on the report — added here so the owner can
+    // see the full counted breakdown, not just the derived split.
+    var closingDenomHtml = cd ? denomTableHtml('Overall Closing Cash Denominations', cd.closingDenoms) : '';
+    // Show a Handover Denominations table whenever we know the Overall
+    // Closing breakdown — computeHandoverDenoms() already treats a
+    // missing/empty Inner Drawer breakdown as "nothing held back", so a
+    // session where the whole drawer was handed over (no Inner Drawer
+    // cash at all — the common case) still gets its Handover
+    // denominations shown correctly, equal to the full closing count.
+    // Previously this was gated on hasInnerDenoms, which hid the
+    // Handover table entirely for any session that didn't use the Inner
+    // Drawer split.
+    var hasClosingDenoms = !!(cd && cd.closingDenoms && Object.keys(cd.closingDenoms).length);
+    var handoverDenoms = cd ? (cd.handoverDenoms || (hasClosingDenoms ? computeHandoverDenoms(cd.closingDenoms, cd.innerDrawerDenoms) : null)) : null;
+    var handoverDenomHtml = handoverDenoms ? denomTableHtml('Handover Cash Denominations', handoverDenoms) : '';
+
+    // Calculations — a transparent, step-by-step ledger of how Handover
+    // Cash was arrived at, shown after the denominations and before the
+    // itemised Expense Details.
+    var calcRows = [
+      ['Open Cash Drawer Amount', fmtMoney(openingCash)],
+      ['Total Sales Cash', fmtMoney(totalCashSales)],
+      ['Total Expense Cash', '- ' + fmtMoney(cashExpense)],
+      ['Total Actual Cash', actualCash != null ? fmtMoney(actualCash) : '-', true],
+      ['Inner Cash', innerCash != null ? '- ' + fmtMoney(innerCash) : '-'],
+      ['Handover Cash', handoverCash != null ? fmtMoney(handoverCash) : '-', true]
+    ];
+    var calcHtml = cd ? ('<div class="r-gst-head">Calculations</div><table>' + rows(calcRows) + '</table>') : '';
 
     var expenseItems = exp.items || [];
     var expenseDetailHtml = expenseItems.length ? (
@@ -668,9 +1054,25 @@
       }).join('') + '</table>'
     ) : '';
 
-    var denomHtml = cd ? (denomTableHtml('Opening Denominations', cd.openingDenoms) + denomTableHtml('Closing Denominations', cd.closingDenoms)) : '';
+    // Wastages — printed as its own clearly separate block (never folded
+    // into Sales/Expenses/Cash/UPI/Card/Orders totals above).
+    var wastageItems = wst.items || [];
+    var wastageDetailHtml = wastageItems.length ? (
+      '<div class="r-line"></div><div class="r-gst-head">Wastages</div><table>' +
+      wastageItems.map(function (w) {
+        return '<tr><td class="r-cell-name">' + escapeHtml(w.productName || '-') +
+          '<br><span style="font-size:10px;">' + (w.quantity || 0) + ' x ' + fmtMoney(w.unitPrice) + '</span></td>' +
+          '<td class="r-cell-num">' + fmtMoney(w.amount) + '</td></tr>';
+      }).join('') +
+      '<tr class="r-total-row"><td>Total Wastage</td><td class="r-cell-num">' + fmtMoney(wst.total) + '</td></tr>' +
+      '</table>'
+    ) : '';
 
-    function rows(list) { return list.map(function (r) { return '<tr><td>' + r[0] + '</td><td class="r-cell-num">' + r[1] + '</td></tr>'; }).join(''); }
+    function rows(list) {
+      return list.map(function (r) {
+        return '<tr' + (r[2] ? ' class="r-total-row"' : '') + '><td>' + r[0] + '</td><td class="r-cell-num">' + r[1] + '</td></tr>';
+      }).join('');
+    }
 
     return '' +
       '<div class="receipt-80mm">' +
@@ -681,13 +1083,15 @@
         '<div class="r-line"></div>' +
         '<table>' + infoLines.map(function (l) { return '<tr><td>' + l + '</td></tr>'; }).join('') + '</table>' +
         '<div class="r-line"></div>' +
-        '<table><tr class="r-total-row"><td>Total Sale (Takeaway+Dining+Order)</td><td class="r-cell-num">' + fmtMoney(grandTotal) + '</td></tr></table>' +
-        '<div class="r-line"></div>' +
         '<table>' + rows(orderRows) + '</table>' +
         '<div class="r-line"></div>' +
         '<table>' + rows(paymentRows) + '</table>' +
+        (closingDenomHtml ? '<div class="r-line"></div>' + closingDenomHtml : '') +
+        (innerDenomHtml ? '<div class="r-line"></div>' + innerDenomHtml : '') +
+        (handoverDenomHtml ? '<div class="r-line"></div>' + handoverDenomHtml : '') +
+        (calcHtml ? '<div class="r-line"></div>' + calcHtml : '') +
         expenseDetailHtml +
-        (denomHtml ? '<div class="r-line"></div>' + denomHtml : '') +
+        wastageDetailHtml +
         (cd && cd.closingNotes ? '<div class="r-line"></div><div class="r-remarks"><b>Closing Notes:</b> ' + escapeHtml(cd.closingNotes) + '</div>' : '') +
         '<div class="r-line"></div>' +
         '<div class="r-footer">Day Summary — ' + (summary.date || '') + '<br>Powered By <i>SURYA CODE</i></div>' +
@@ -706,10 +1110,16 @@
   document.getElementById('daySummaryPrintBtn').addEventListener('click', function () {
     if (!lastSummary) return;
     var win = window.open('', '_blank', 'width=400,height=600');
-    // Deliberately NOT writing a literal script tag pair into this HTML
-    // string. Triggering print() via win.onload instead avoids ever
-    // writing a closing-script-tag-shaped string into the popup's HTML.
-    win.document.write('<html><head><title>Day Summary</title><style>' +
+    if (!win) { showError('Popup blocked — allow popups for this site to print the summary.'); return; }
+    // Built entirely through DOM APIs (createElement / textContent /
+    // innerHTML on the popup's own document) instead of a single
+    // document.write() string. This removes any dependency on the
+    // calling page's HTML parser ever scanning through a big literal
+    // HTML string, so there's no way a piece of that string can be
+    // mistaken for a script-tag boundary.
+    win.document.title = 'Day Summary';
+    var style = win.document.createElement('style');
+    style.textContent =
       'body{font-family:monospace;padding:8px;} ' +
       '.r-center{text-align:center;} .r-shop-name{font-size:16px;font-weight:800;} ' +
       '.r-line{border-top:1.5px dashed #000;margin:6px 0;} table{width:100%;border-collapse:collapse;font-size:12.5px;} ' +
@@ -717,13 +1127,312 @@
       '.r-gst-head{font-weight:800;border-bottom:1.5px dashed #000;margin-bottom:3px;} ' +
       '.r-denom-head{font-weight:800;margin-top:4px;} .r-total-row{font-weight:800;} ' +
       '.r-footer{text-align:center;margin-top:8px;font-size:11.5px;font-weight:700;} ' +
-      '.r-remarks{font-size:12px;font-weight:700;margin-top:5px;}' +
-      '</style></head><body>' + buildDaySummaryReceiptHtml(lastSummary) +
-      '</body></html>');
-    win.document.close();
+      '.r-remarks{font-size:12px;font-weight:700;margin-top:5px;}';
+    win.document.head.appendChild(style);
+    win.document.body.innerHTML = buildDaySummaryReceiptHtml(lastSummary);
     win.onload = function () {
       setTimeout(function () { win.print(); }, 300);
     };
+  });
+
+  // -----------------------------------------------------------------------
+  // Card drill-down — every summary card opens a modal listing the actual
+  // records behind its total. Reuses `lastSummary` (the exact payload
+  // already fetched for the current date/filter by fetchByRange() above)
+  // so clicking a card never triggers a new network request, and the
+  // total shown in the modal is always computed from the SAME records the
+  // table displays — never a separately-fetched or separately-calculated
+  // number.
+  // -----------------------------------------------------------------------
+  var DRILL_CONFIG = {
+    takeaway: {
+      title: 'Takeaway Bills',
+      getRecords: function (s) { return s.takeAwayRecords || []; },
+      getTotal: function (s) { return s.takeAwayTotal; },
+      columns: [
+        { key: 'invoiceNo', label: 'Invoice No' },
+        { key: 'date', label: 'Date' },
+        { key: 'staff', label: 'Staff' },
+        { key: 'payment', label: 'Payment' },
+        { key: 'subtotal', label: 'Subtotal', money: true },
+        { key: 'discount', label: 'Discount', money: true },
+        { key: 'gst', label: 'GST', money: true },
+        { key: 'cash', label: 'Cash', money: true },
+        { key: 'upi', label: 'UPI', money: true },
+        { key: 'card', label: 'Card', money: true },
+        { key: 'total', label: 'Total', money: true },
+        { key: 'status', label: 'Status' }
+      ],
+      detailTitle: function (r) { return 'Bill ' + (r.invoiceNo || ''); }
+    },
+    dining: {
+      title: 'Dining Sales',
+      getRecords: function (s) { return s.diningRecords || []; },
+      getTotal: function (s) { return s.diningTotal; },
+      columns: [
+        { key: 'invoiceNo', label: 'Bill No' },
+        { key: 'date', label: 'Date' },
+        { key: 'staff', label: 'Staff' },
+        { key: 'payment', label: 'Payment' },
+        { key: 'subtotal', label: 'Subtotal', money: true },
+        { key: 'discount', label: 'Discount', money: true },
+        { key: 'gst', label: 'GST', money: true },
+        { key: 'cash', label: 'Cash', money: true },
+        { key: 'upi', label: 'UPI', money: true },
+        { key: 'card', label: 'Card', money: true },
+        { key: 'total', label: 'Total', money: true },
+        { key: 'status', label: 'Status' }
+      ],
+      detailTitle: function (r) { return 'Bill ' + (r.invoiceNo || ''); }
+    },
+    order: {
+      title: 'Cake / Order Transactions',
+      getRecords: function (s) { return s.orderRecords || []; },
+      getTotal: function (s) { return orderTotalOf(s); },
+      columns: [
+        { key: 'orderNo', label: 'Order No' },
+        { key: 'date', label: 'Date' },
+        { key: 'time', label: 'Time' },
+        { key: 'customer', label: 'Customer' },
+        { key: 'phone', label: 'Phone' },
+        { key: 'deliveryDate', label: 'Delivery Date' },
+        { key: 'paymentType', label: 'Type' },
+        { key: 'amount', label: 'Amount', money: true },
+        { key: 'paymentMethod', label: 'Payment Method' },
+        { key: 'orderStatus', label: 'Order Status' }
+      ],
+      detailTitle: function (r) { return 'Order ' + (r.orderNo || ''); }
+    },
+    cash: {
+      title: 'Cash Transactions',
+      getRecords: function (s) { return s.cashTransactions || []; },
+      getTotal: function (s) { return s.cash; },
+      columns: [
+        { key: 'date', label: 'Date' },
+        { key: 'reference', label: 'Bill/Order No' },
+        { key: 'source', label: 'Transaction Type' },
+        { key: 'transactionType', label: 'Category' },
+        { key: 'amount', label: 'Amount', money: true },
+        { key: 'staffName', label: 'Staff' },
+        { key: 'remarks', label: 'Remarks' }
+      ],
+      detailTitle: function (r) { return r.source + ' — ' + (r.reference || ''); }
+    },
+    upi: {
+      title: 'UPI Transactions',
+      getRecords: function (s) { return s.upiTransactions || []; },
+      getTotal: function (s) { return s.upi; },
+      columns: [
+        { key: 'date', label: 'Date' },
+        { key: 'reference', label: 'Bill/Order No' },
+        { key: 'source', label: 'Transaction Type' },
+        { key: 'transactionType', label: 'Category' },
+        { key: 'amount', label: 'Amount', money: true },
+        { key: 'staffName', label: 'Staff' },
+        { key: 'remarks', label: 'Remarks' }
+      ],
+      detailTitle: function (r) { return r.source + ' — ' + (r.reference || ''); }
+    },
+    card: {
+      title: 'Card Transactions',
+      getRecords: function (s) { return s.cardTransactions || []; },
+      getTotal: function (s) { return s.card; },
+      columns: [
+        { key: 'date', label: 'Date' },
+        { key: 'reference', label: 'Bill/Order No' },
+        { key: 'source', label: 'Transaction Type' },
+        { key: 'transactionType', label: 'Category' },
+        { key: 'amount', label: 'Amount', money: true },
+        { key: 'staffName', label: 'Staff' },
+        { key: 'remarks', label: 'Remarks' }
+      ],
+      detailTitle: function (r) { return r.source + ' — ' + (r.reference || ''); }
+    },
+    expense: {
+      title: 'Expense Records',
+      getRecords: function (s) { return (s.expenses && s.expenses.items) || []; },
+      getTotal: function (s) { return s.expenses ? s.expenses.total : 0; },
+      columns: [
+        { key: 'expenseId', label: 'Expense ID' },
+        { key: 'date', label: 'Date' },
+        { key: 'category', label: 'Category' },
+        { key: 'description', label: 'Description' },
+        { key: 'amount', label: 'Amount', money: true },
+        { key: 'paymentMethod', label: 'Payment Method' },
+        { key: 'staffName', label: 'Staff' },
+        { key: 'remarks', label: 'Remarks' }
+      ],
+      detailTitle: function (r) { return 'Expense ' + (r.expenseId || ''); }
+    },
+    wastage: {
+      title: 'Wastage Records',
+      getRecords: function (s) { return (s.wastages && s.wastages.items) || []; },
+      getTotal: function (s) { return s.wastages ? s.wastages.total : 0; },
+      columns: [
+        { key: 'wasteId', label: 'Waste ID' },
+        { key: 'date', label: 'Date' },
+        { key: 'time', label: 'Time' },
+        { key: 'productName', label: 'Item' },
+        { key: 'category', label: 'Category' },
+        { key: 'quantity', label: 'Quantity' },
+        { key: 'unitPrice', label: 'Rate', money: true },
+        { key: 'amount', label: 'Wastage Amount', money: true },
+        { key: 'staffName', label: 'Staff' },
+        { key: 'remarks', label: 'Remarks' }
+      ],
+      detailTitle: function (r) { return r.productName || 'Wastage Record'; }
+    }
+  };
+
+  var recordsOverlay = document.getElementById('recordsModalOverlay');
+  var recordsTitleEl = document.getElementById('recordsTitle');
+  var recordsCountLabel = document.getElementById('recordsCountLabel');
+  var recordsTotalLabel = document.getElementById('recordsTotalLabel');
+  var recordsSearchInput = document.getElementById('recordsSearchInput');
+  var recordsTableHead = document.getElementById('recordsTableHead');
+  var recordsTableBody = document.getElementById('recordsTableBody');
+  var recordsTable = document.getElementById('recordsTable');
+  var recordsEmptyState = document.getElementById('recordsEmptyState');
+  var recordsFooterCount = document.getElementById('recordsFooterCount');
+  var recordsFooterTotal = document.getElementById('recordsFooterTotal');
+
+  var currentDrillType = null;
+  var currentDrillRecords = [];
+  var currentDrillConfig = null;
+
+  function fmtCell(col, val) {
+    if (col.money) return fmtMoney(val);
+    if (val === null || val === undefined || val === '') return '-';
+    return String(val);
+  }
+
+  function renderRecordsTable(records) {
+    var cols = currentDrillConfig.columns;
+    recordsTableHead.innerHTML = cols.map(function (c) { return '<th>' + escapeHtml(c.label) + '</th>'; }).join('');
+
+    if (!records.length) {
+      recordsTableBody.innerHTML = '';
+      recordsTable.classList.add('hidden');
+      recordsEmptyState.classList.remove('hidden');
+      return;
+    }
+    recordsTable.classList.remove('hidden');
+    recordsEmptyState.classList.add('hidden');
+
+    recordsTableBody.innerHTML = records.map(function (r, idx) {
+      var cells = cols.map(function (c) { return '<td>' + escapeHtml(fmtCell(c, r[c.key])) + '</td>'; }).join('');
+      return '<tr data-idx="' + idx + '">' + cells + '</tr>';
+    }).join('');
+
+    Array.prototype.forEach.call(recordsTableBody.querySelectorAll('tr'), function (tr) {
+      tr.addEventListener('click', function () {
+        var idx = Number(tr.getAttribute('data-idx'));
+        openRecordDetail(records[idx]);
+      });
+    });
+  }
+
+  function sumRecords(records, key) {
+    return records.reduce(function (sum, r) { return sum + (Number(r[key]) || 0); }, 0);
+  }
+
+  function updateRecordsHeaderAndFooter(records, cardTotal) {
+    var count = records.length;
+    recordsCountLabel.textContent = count + ' Record' + (count === 1 ? '' : 's');
+    // Prefer the exact figure shown on the dashboard card; fall back to
+    // summing the displayed records with whichever money column exists
+    // (amount/total) so the modal total always matches the table under it.
+    var amountKey = currentDrillConfig.columns.some(function (c) { return c.key === 'amount' && c.money; }) ? 'amount'
+      : (currentDrillConfig.columns.some(function (c) { return c.key === 'total' && c.money; }) ? 'total' : null);
+    var displayedTotal = (cardTotal != null) ? cardTotal : (amountKey ? sumRecords(records, amountKey) : 0);
+    recordsTotalLabel.textContent = 'Total ' + fmtMoney(displayedTotal);
+    recordsFooterCount.textContent = count + ' record' + (count === 1 ? '' : 's');
+    recordsFooterTotal.textContent = fmtMoney(displayedTotal);
+  }
+
+  function openDrillDown(type) {
+    var cfg = DRILL_CONFIG[type];
+    if (!cfg || !lastSummary) return;
+    currentDrillType = type;
+    currentDrillConfig = cfg;
+    currentDrillRecords = cfg.getRecords(lastSummary) || [];
+
+    recordsTitleEl.textContent = cfg.title;
+    recordsSearchInput.value = '';
+    renderRecordsTable(currentDrillRecords);
+    updateRecordsHeaderAndFooter(currentDrillRecords, cfg.getTotal(lastSummary));
+
+    recordsOverlay.classList.remove('hidden');
+    setTimeout(function () { recordsSearchInput.focus(); }, 50);
+  }
+
+  function closeDrillDown() {
+    recordsOverlay.classList.add('hidden');
+    currentDrillType = null;
+    currentDrillRecords = [];
+    currentDrillConfig = null;
+  }
+
+  recordsSearchInput.addEventListener('input', function () {
+    var q = recordsSearchInput.value.trim().toLowerCase();
+    if (!q) {
+      renderRecordsTable(currentDrillRecords);
+      updateRecordsHeaderAndFooter(currentDrillRecords, currentDrillConfig.getTotal(lastSummary));
+      return;
+    }
+    var filtered = currentDrillRecords.filter(function (r) {
+      return currentDrillConfig.columns.some(function (c) {
+        var v = r[c.key];
+        return v != null && String(v).toLowerCase().indexOf(q) !== -1;
+      });
+    });
+    renderRecordsTable(filtered);
+    // While searching, the total reflects the filtered subset (not the
+    // card's overall total), so the owner can see what the search matched.
+    var amountKey = currentDrillConfig.columns.some(function (c) { return c.key === 'amount' && c.money; }) ? 'amount'
+      : (currentDrillConfig.columns.some(function (c) { return c.key === 'total' && c.money; }) ? 'total' : null);
+    updateRecordsHeaderAndFooter(filtered, amountKey ? sumRecords(filtered, amountKey) : 0);
+  });
+
+  document.getElementById('recordsCloseBtnTop').addEventListener('click', closeDrillDown);
+  document.getElementById('recordsCloseBtnBottom').addEventListener('click', closeDrillDown);
+  recordsOverlay.addEventListener('click', function (e) { if (e.target === recordsOverlay) closeDrillDown(); });
+
+  // Row detail sub-modal
+  var recordDetailOverlay = document.getElementById('recordDetailOverlay');
+  var recordDetailTitle = document.getElementById('recordDetailTitle');
+  var recordDetailBody = document.getElementById('recordDetailBody');
+
+  function humanizeKey(k) {
+    return k.replace(/([A-Z])/g, ' $1').replace(/^./, function (s) { return s.toUpperCase(); }).trim();
+  }
+
+  function openRecordDetail(record) {
+    recordDetailTitle.textContent = currentDrillConfig.detailTitle(record);
+    var moneyKeys = {};
+    currentDrillConfig.columns.forEach(function (c) { if (c.money) moneyKeys[c.key] = true; });
+    recordDetailBody.innerHTML = Object.keys(record).map(function (k) {
+      var val = record[k];
+      var display = moneyKeys[k] ? fmtMoney(val) : (val === '' || val == null ? '-' : String(val));
+      return '<div class="record-detail-row"><span class="rd-label">' + escapeHtml(humanizeKey(k)) + '</span><span class="rd-value">' + escapeHtml(display) + '</span></div>';
+    }).join('');
+    recordDetailOverlay.classList.remove('hidden');
+  }
+
+  document.getElementById('recordDetailCloseBtn').addEventListener('click', function () {
+    recordDetailOverlay.classList.add('hidden');
+  });
+  recordDetailOverlay.addEventListener('click', function (e) { if (e.target === recordDetailOverlay) recordDetailOverlay.classList.add('hidden'); });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.drill-card'), function (card) {
+    card.addEventListener('click', function () {
+      var type = card.getAttribute('data-drill');
+      if (!lastSummary) { showError('Load the dashboard first, then try again.'); return; }
+      openDrillDown(type);
+    });
+    card.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+    });
   });
 
   var savedPass = getSavedPass();
