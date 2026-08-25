@@ -104,6 +104,7 @@
   .stat.takeaway .icon, .stat.takeaway .value{ color:#8B2942; }
   .stat.dining .icon, .stat.dining .value{ color:#6E4A9E; }
   .stat.order .icon, .stat.order .value{ color:#D64550; }
+    .stat.product-sales .icon, .stat.product-sales .value{ color:#B06A2B; }
 
   .footer-row{ display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
   .footer-row .updated{ font-size:12px; color: var(--ink-muted); }
@@ -292,6 +293,31 @@
   .record-detail-row:last-of-type{ border-bottom:none; }
   .record-detail-row .rd-label{ color: var(--ink-muted); font-weight:600; }
   .record-detail-row .rd-value{ text-align:right; color: var(--cocoa); font-weight:600; word-break:break-word; }
+  .sales-products-box{
+    margin-top:14px; border:1px solid #E7D7CA; border-radius:10px;
+    overflow:hidden; background:#fff;
+  }
+  .sales-products-title{
+    padding:10px 12px; background:#FBEEDD; color:var(--cocoa);
+    font-weight:800; font-size:13px; letter-spacing:.2px;
+  }
+  .sales-products-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  .sales-products-table th{
+    padding:8px 10px; background:var(--berry); color:#fff;
+    font-weight:700; text-align:left; border-bottom:1px solid #6f1935;
+  }
+  .sales-products-table th:nth-child(2),
+  .sales-products-table th:nth-child(3),
+  .sales-products-table td:nth-child(2),
+  .sales-products-table td:nth-child(3){text-align:right;}
+  .sales-products-table td{
+    padding:8px 10px; border-bottom:1px solid #F1E6DC; color:var(--cocoa);
+  }
+  .sales-products-table tbody tr:last-child td{border-bottom:none;}
+  .sales-products-total{
+    display:flex; justify-content:space-between; gap:12px;
+    padding:10px; background:#FBF1EA; font-weight:800; color:var(--cocoa);
+  }
   .record-detail-close{
     width:100%; margin-top:14px; padding:10px; border-radius:10px; border:none;
     background:#F1E6DC; color: var(--cocoa); font-weight:700; font-size:13px; cursor:pointer;
@@ -482,6 +508,12 @@
         <div class="label">Today's Wastage</div>
         <div class="value" id="wastageVal">—</div>
         <div id="wastageSub" class="unavailable-note"></div>
+      </div>
+      <div class="stat product-sales drill-card" data-drill="productSales" tabindex="0" role="button" aria-label="View Product Wise Sales">
+        <div class="icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+        <div class="label">Products Sales</div>
+        <div class="value" id="productSalesVal">₹0.00</div>
+        <div class="sub" id="productSalesSub">Qty 0 · 0 products</div>
       </div>
     </div>
 
@@ -705,6 +737,12 @@
       'Adv ' + fmtMoney(summary.advancePaid) + ' + Bal ' + fmtMoney(summary.balancePaid) +
       (summary.todayOrders ? ' · ' + summary.todayOrders + ' order' + (summary.todayOrders === 1 ? '' : 's') : '');
 
+    var productSales = Array.isArray(summary.productSales) ? summary.productSales : [];
+    var productSalesAmount = productSales.reduce(function (sum, p) { return sum + (Number(p.amount) || 0); }, 0);
+    var productSalesQty = productSales.reduce(function (sum, p) { return sum + (Number(p.qty) || 0); }, 0);
+    setValueAnimated(document.getElementById('productSalesVal'), fmtMoney(productSalesAmount), false);
+    document.getElementById('productSalesSub').textContent = 'Qty ' + productSalesQty + ' · ' + productSales.length + ' product' + (productSales.length === 1 ? '' : 's');
+
     setValueAnimated(document.getElementById('cashVal'), fmtMoney(summary.cash), false);
     setValueAnimated(document.getElementById('upiVal'), fmtMoney(summary.upi), false);
     setValueAnimated(document.getElementById('cardVal'), fmtMoney(summary.card), false);
@@ -925,8 +963,8 @@
     // shown as its own line below).
     var totalSales = Number(summary.diningTotal || 0) +
       Number(summary.takeAwayTotal || 0) +
-      Number(summary.advancePaid || 0);
-
+      Number(summary.advancePaid || 0)+
+  Number(summary.balancePaid || 0);
     var openingCash = cd ? Number(cd.openingCash || 0) : 0;
     var totalCashSales = Number(summary.cash || 0);
 
@@ -1124,15 +1162,13 @@
       getTotal: function (s) { return s.takeAwayTotal; },
       columns: [
         { key: 'invoiceNo', label: 'Invoice No' },
-        { key: 'date', label: 'Date' },
+        { key: 'dateTime', label: 'Date & Time' },
+        { key: 'staff', label: 'Staff' },
 
-        { key: 'payment', label: 'Payment' },
+        { key: 'paymentBreakdown', label: 'Payment' },
         { key: 'subtotal', label: 'Subtotal', money: true },
         { key: 'discount', label: 'Discount', money: true },
         { key: 'gst', label: 'GST', money: true },
-        { key: 'cash', label: 'Cash', money: true },
-        { key: 'upi', label: 'UPI', money: true },
-        { key: 'card', label: 'Card', money: true },
         { key: 'total', label: 'Total', money: true },
         { key: 'status', label: 'Status' }
       ],
@@ -1144,15 +1180,12 @@
       getTotal: function (s) { return s.diningTotal; },
       columns: [
         { key: 'invoiceNo', label: 'Bill No' },
-        { key: 'date', label: 'Date' },
-
-        { key: 'payment', label: 'Payment' },
+        { key: 'dateTime', label: 'Date & Time' },
+        { key: 'staff', label: 'Staff' },
+        { key: 'paymentBreakdown', label: 'Payment' },
         { key: 'subtotal', label: 'Subtotal', money: true },
         { key: 'discount', label: 'Discount', money: true },
         { key: 'gst', label: 'GST', money: true },
-        { key: 'cash', label: 'Cash', money: true },
-        { key: 'upi', label: 'UPI', money: true },
-        { key: 'card', label: 'Card', money: true },
         { key: 'total', label: 'Total', money: true },
         { key: 'status', label: 'Status' }
       ],
@@ -1164,11 +1197,14 @@
       getTotal: function (s) { return orderTotalOf(s); },
       columns: [
         { key: 'orderNo', label: 'Order No' },
-        { key: 'date', label: 'Date' },
+        { key: 'manualBillNo', label: 'Manual Bill No.' },
+        { key: 'staff', label: 'Staff' },
+        { key: 'dateTime', label: 'Date & Time' },
  
         { key: 'customer', label: 'Customer' },
         { key: 'phone', label: 'Phone' },
-        { key: 'deliveryDate', label: 'Delivery Date' },
+        { key: 'items', label: 'Products', products: true },
+        { key: 'deliveryDateTime', label: 'Delivery Date & Time' },
         { key: 'paymentType', label: 'Type' },
         { key: 'amount', label: 'Amount', money: true },
         { key: 'paymentMethod', label: 'Payment Method' },
@@ -1181,10 +1217,11 @@
       getRecords: function (s) { return s.cashTransactions || []; },
       getTotal: function (s) { return s.cash; },
       columns: [
-        { key: 'date', label: 'Date' },
         { key: 'reference', label: 'Bill/Order No' },
+        { key: 'dateTime', label: 'Date & Time' },
+        { key: 'staffName', label: 'Staff' },
         { key: 'source', label: 'Transaction Type' },
-        { key: 'transactionType', label: 'Category' },
+        { key: 'paymentBreakdown', label: 'Payment' },
         { key: 'amount', label: 'Amount', money: true }
       ],
       detailTitle: function (r) { return r.source + ' — ' + (r.reference || ''); }
@@ -1194,10 +1231,11 @@
       getRecords: function (s) { return s.upiTransactions || []; },
       getTotal: function (s) { return s.upi; },
       columns: [
-        { key: 'date', label: 'Date' },
         { key: 'reference', label: 'Bill/Order No' },
+        { key: 'dateTime', label: 'Date & Time' },
+        { key: 'staffName', label: 'Staff' },
         { key: 'source', label: 'Transaction Type' },
-        { key: 'transactionType', label: 'Category' },
+        { key: 'paymentBreakdown', label: 'Payment' },
         { key: 'amount', label: 'Amount', money: true }
       ],
       detailTitle: function (r) { return r.source + ' — ' + (r.reference || ''); }
@@ -1207,13 +1245,27 @@
       getRecords: function (s) { return s.cardTransactions || []; },
       getTotal: function (s) { return s.card; },
       columns: [
-        { key: 'date', label: 'Date' },
         { key: 'reference', label: 'Bill/Order No' },
+        { key: 'dateTime', label: 'Date & Time' },
+        { key: 'staffName', label: 'Staff' },
         { key: 'source', label: 'Transaction Type' },
-        { key: 'transactionType', label: 'Category' },
+        { key: 'paymentBreakdown', label: 'Payment' },
         { key: 'amount', label: 'Amount', money: true }
       ],
       detailTitle: function (r) { return r.source + ' — ' + (r.reference || ''); }
+    },
+    productSales: {
+      title: 'Product Wise Sales',
+      getRecords: function (s) { return Array.isArray(s.productSales) ? s.productSales : []; },
+      getTotal: function (s) {
+        return (Array.isArray(s.productSales) ? s.productSales : []).reduce(function (sum, p) { return sum + (Number(p.amount) || 0); }, 0);
+      },
+      columns: [
+        { key: 'name', label: 'Product' },
+        { key: 'qty', label: 'Qty' },
+        { key: 'amount', label: 'Amount', money: true }
+      ],
+      detailTitle: function (r) { return 'Product Sales — ' + (r.name || ''); }
     },
     expense: {
       title: 'Expense Records',
@@ -1266,8 +1318,34 @@
   var currentDrillRecords = [];
   var currentDrillConfig = null;
 
+  function formatDisplayDateTime(val) {
+    if (val === null || val === undefined || val === '' || val === '-' || val === '0' || val === 0) return '-';
+    var text = String(val).trim();
+    if (!text || /(^|\s)(1970-01-01|Jan 01 1970|01 Jan 1970)(\s|$)/i.test(text)) return '-';
+    // Already in the desired human-readable format.
+    if (/^\d{2} [A-Za-z]{3} \d{4}, \d{1,2}:\d{2} (AM|PM)$/i.test(text)) return text;
+    var d = new Date(text);
+    if (isNaN(d.getTime()) || d.getFullYear() < 2000) return '-';
+    try {
+      return new Intl.DateTimeFormat('en-IN', {
+        timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true
+      }).format(d).replace(',', ',');
+    } catch (e) { return text; }
+  }
+
   function fmtCell(col, val) {
     if (col.money) return fmtMoney(val);
+    if (col.key === 'dateTime' || col.key === 'deliveryDateTime') return formatDisplayDateTime(val);
+    if (col.products) {
+      var items = Array.isArray(val) ? val : [];
+      if (!items.length) return '-';
+      return items.map(function (item) {
+        var name = item.name || item.productName || '-';
+        var qty = item.qty != null ? item.qty : (item.quantity != null ? item.quantity : 0);
+        return name + ' x' + qty;
+      }).join(', ');
+    }
     if (val === null || val === undefined || val === '') return '-';
     return String(val);
   }
@@ -1373,15 +1451,94 @@
     return k.replace(/([A-Z])/g, ' $1').replace(/^./, function (s) { return s.toUpperCase(); }).trim();
   }
 
-  function openRecordDetail(record) {
-    recordDetailTitle.textContent = currentDrillConfig.detailTitle(record);
-    var moneyKeys = {};
-    currentDrillConfig.columns.forEach(function (c) { if (c.money) moneyKeys[c.key] = true; });
-    recordDetailBody.innerHTML = Object.keys(record).map(function (k) {
-      var val = record[k];
-      var display = moneyKeys[k] ? fmtMoney(val) : (val === '' || val == null ? '-' : String(val));
-      return '<div class="record-detail-row"><span class="rd-label">' + escapeHtml(humanizeKey(k)) + '</span><span class="rd-value">' + escapeHtml(display) + '</span></div>';
+  function renderLinkedTransactionDetail(record) {
+    var isOrder = String(record.linkedType || '').toLowerCase() === 'order';
+    recordDetailTitle.textContent = isOrder ? ('Order ' + (record.orderNo || record.reference || '')) : ('Bill ' + (record.invoiceNo || record.reference || ''));
+    var items = Array.isArray(record.items) ? record.items : [];
+    var itemRows = items.map(function (item) {
+      var qty = Number(item.qty != null ? item.qty : (item.quantity || 0));
+      var amount = Number(item.amount != null ? item.amount : (Number(item.price || 0) * qty));
+      return '<tr><td>' + escapeHtml(item.name || item.productName || '-') + '</td><td class="text-end">' + escapeHtml(String(qty)) + '</td><td class="text-end">' + escapeHtml(fmtMoney(amount)) + '</td></tr>';
     }).join('');
+    if (!itemRows) itemRows = '<tr><td colspan="3" class="text-center text-muted">Product details are not available for this older ' + (isOrder ? 'order' : 'invoice') + '.</td></tr>';
+    if (isOrder) {
+      recordDetailBody.innerHTML =
+        '<div class="record-detail-row"><span class="rd-label">Order No</span><span class="rd-value">' + escapeHtml(record.orderNo || record.reference || '-') + '</span></div>' +
+        '<div class="record-detail-row"><span class="rd-label">Date & Time</span><span class="rd-value">' + escapeHtml(formatDisplayDateTime(record.dateTime)) + '</span></div>' +
+        '<div class="record-detail-row"><span class="rd-label">Staff</span><span class="rd-value">' + escapeHtml(record.staffName || '-') + '</span></div>' +
+        '<div class="record-detail-row"><span class="rd-label">Customer</span><span class="rd-value">' + escapeHtml(record.customer || '-') + '</span></div>' +
+        '<div class="sales-products-box"><div class="sales-products-title">Order Products</div>' +
+        '<table class="sales-products-table"><thead><tr><th>Product</th><th>Qty</th><th>Amount</th></tr></thead><tbody>' + itemRows + '</tbody></table></div>' +
+        '<div class="record-detail-row" style="margin-top:10px;"><span class="rd-label">Payment</span><span class="rd-value">' + escapeHtml(record.paymentBreakdown || '-') + '</span></div>' +
+        '<div class="record-detail-row"><span class="rd-label">Collected</span><span class="rd-value">' + escapeHtml(fmtMoney(record.amount)) + '</span></div>';
+    } else {
+      recordDetailBody.innerHTML =
+        '<div class="record-detail-row"><span class="rd-label">Invoice No</span><span class="rd-value">' + escapeHtml(record.invoiceNo || record.reference || '-') + '</span></div>' +
+        '<div class="record-detail-row"><span class="rd-label">Date & Time</span><span class="rd-value">' + escapeHtml(formatDisplayDateTime(record.dateTime)) + '</span></div>' +
+        '<div class="record-detail-row"><span class="rd-label">Staff</span><span class="rd-value">' + escapeHtml(record.staffName || '-') + '</span></div>' +
+        '<div class="record-detail-row"><span class="rd-label">Transaction Type</span><span class="rd-value">' + escapeHtml(record.transactionType || '-') + '</span></div>' +
+        '<div class="sales-products-box"><div class="sales-products-title">Sales Products</div>' +
+        '<table class="sales-products-table"><thead><tr><th>Product</th><th>Qty</th><th>Amount</th></tr></thead><tbody>' + itemRows + '</tbody></table>' +
+        '<div class="sales-products-total"><span>Bill Total</span><span>' + escapeHtml(fmtMoney(record.total)) + '</span></div></div>' +
+        '<div class="record-detail-row" style="margin-top:10px;"><span class="rd-label">Payment</span><span class="rd-value">' + escapeHtml(record.paymentBreakdown || '-') + '</span></div>' +
+        '<div class="record-detail-row"><span class="rd-label">Collected in this modal</span><span class="rd-value">' + escapeHtml(fmtMoney(record.amount)) + '</span></div>';
+    }
+    recordDetailOverlay.classList.remove('hidden');
+  }
+
+  function openRecordDetail(record) {
+    if (currentDrillType === 'cash' || currentDrillType === 'upi' || currentDrillType === 'card') {
+      renderLinkedTransactionDetail(record);
+      return;
+    }
+    recordDetailTitle.textContent = currentDrillConfig.detailTitle(record);
+    if (currentDrillType === 'order') {
+      var orderItems = Array.isArray(record.items) ? record.items : [];
+      var orderItemRows = orderItems.map(function (item) {
+        var qty = Number(item.qty != null ? item.qty : (item.quantity || 0));
+        var amount = Number(item.amount != null ? item.amount : (Number(item.price || 0) * qty));
+        return '<tr><td>' + escapeHtml(item.name || item.productName || '-') + '</td><td class=\"text-end\">' + escapeHtml(String(qty)) + '</td><td class=\"text-end\">' + escapeHtml(fmtMoney(amount)) + '</td></tr>';
+      }).join('');
+      if (!orderItemRows) orderItemRows = '<tr><td colspan=\"3\" class=\"text-center text-muted\">Product details are not available for this older order.</td></tr>';
+      recordDetailBody.innerHTML =
+        '<div class=\"record-detail-row\"><span class=\"rd-label\">Order No</span><span class=\"rd-value\">' + escapeHtml(record.orderNo || '-') + '</span></div>' +
+        '<div class=\"record-detail-row\"><span class=\"rd-label\">Manual Bill No.</span><span class=\"rd-value\">' + escapeHtml(record.manualBillNo || '-') + '</span></div>' +
+        '<div class=\"record-detail-row\"><span class=\"rd-label\">Date & Time</span><span class=\"rd-value\">' + escapeHtml(formatDisplayDateTime(record.dateTime)) + '</span></div>' +
+        '<div class=\"record-detail-row\"><span class=\"rd-label\">Staff</span><span class=\"rd-value\">' + escapeHtml(record.staff || '-') + '</span></div>' +
+        '<div class=\"record-detail-row\"><span class=\"rd-label\">Customer</span><span class=\"rd-value\">' + escapeHtml(record.customer || '-') + '</span></div>' +
+        '<div class=\"sales-products-box\">' +
+        '<div class=\"sales-products-title\">Order Products</div>' +
+        '<table class=\"sales-products-table\"><thead><tr><th>Product</th><th>Qty</th><th>Amount</th></tr></thead><tbody>' + orderItemRows + '</tbody></table>' +
+        '</div>' +
+        '<div class=\"record-detail-row\" style=\"margin-top:10px;\"><span class=\"rd-label\">Payment</span><span class=\"rd-value\">' + escapeHtml(record.paymentBreakdown || (record.paymentType || '-') + ' — ' + (record.paymentMethod || '-')) + '</span></div>' +
+        '<div class=\"record-detail-row\"><span class=\"rd-label\">Amount</span><span class=\"rd-value\">' + escapeHtml(fmtMoney(record.amount)) + '</span></div>';
+    } else if (currentDrillType === 'takeaway' || currentDrillType === 'dining') {
+      var items = Array.isArray(record.items) ? record.items : [];
+      var itemRows = items.map(function (item) {
+        var qty = Number(item.qty || item.quantity || 0);
+        var amount = Number(item.amount != null ? item.amount : (Number(item.price || 0) * qty));
+        return '<tr><td>' + escapeHtml(item.name || item.productName || '-') + '</td><td class="text-end">' + escapeHtml(String(qty)) + '</td><td class="text-end">' + escapeHtml(fmtMoney(amount)) + '</td></tr>';
+      }).join('');
+      if (!itemRows) itemRows = '<tr><td colspan="3" class="text-center text-muted">Product details are not available for this older invoice.</td></tr>';
+      recordDetailBody.innerHTML =
+        '<div class="record-detail-row"><span class="rd-label">Invoice No</span><span class="rd-value">' + escapeHtml(record.invoiceNo || '-') + '</span></div>' +
+        '<div class="record-detail-row"><span class="rd-label">Date & Time</span><span class="rd-value">' + escapeHtml(formatDisplayDateTime(record.dateTime)) + '</span></div>' +
+        '<div class="record-detail-row"><span class="rd-label">Staff</span><span class="rd-value">' + escapeHtml(record.staff || '-') + '</span></div>' +
+        '<div class="record-detail-row"><span class="rd-label">Payment</span><span class="rd-value">' + escapeHtml(record.paymentBreakdown || record.payment || '-') + '</span></div>' +
+        '<div class="sales-products-box">' +
+        '<div class="sales-products-title">Sales Products</div>' +
+        '<table class="sales-products-table"><thead><tr><th>Product</th><th>Qty</th><th>Amount</th></tr></thead><tbody>' + itemRows + '</tbody></table>' +
+        '<div class="sales-products-total"><span>Total</span><span>' + escapeHtml(fmtMoney(record.total)) + '</span></div>' +
+        '</div>';
+    } else {
+      var moneyKeys = {};
+      currentDrillConfig.columns.forEach(function (c) { if (c.money) moneyKeys[c.key] = true; });
+      recordDetailBody.innerHTML = Object.keys(record).filter(function (k) { return k !== 'items'; }).map(function (k) {
+        var val = record[k];
+        var display = moneyKeys[k] ? fmtMoney(val) : (val === '' || val == null ? '-' : String(val));
+        return '<div class="record-detail-row"><span class="rd-label">' + escapeHtml(humanizeKey(k)) + '</span><span class="rd-value">' + escapeHtml(display) + '</span></div>';
+      }).join('');
+    }
     recordDetailOverlay.classList.remove('hidden');
   }
 
