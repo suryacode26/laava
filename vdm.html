@@ -1039,21 +1039,20 @@
   <!-- Top Navigation Bar -->
   <nav class="top-nav" id="locationNav" aria-label="Locations and settings">
     <div class="location-pills">
-      <a class="nav-pill nav-pill-white" href="https://laavacakes.vercel.app" aria-label="Srimushnam">
+      <a class="nav-pill nav-pill-active" href="https://suryacode26.github.io/laava/" aria-label="Srimushnam">
         <i class="fa-solid fa-location-dot"></i>
         <span>SRIMUSHNAM</span>
         <i class="fa-solid fa-chevron-down pill-chevron"></i>
       </a>
-      
       <a class="nav-pill nav-pill-white" href="veppur.html" aria-label="Veppur">
         <i class="fa-solid fa-location-dot pin-red"></i>
         <span>VEPPUR</span>
         <i class="fa-solid fa-chevron-down pill-chevron"></i>
       </a>
     </div>
-    <!-- <button class="settings-pill-btn" id="gearBtn" aria-label="Settings">
+    <button class="settings-pill-btn" id="gearBtn" aria-label="Settings">
       <i class="fa-solid fa-gear"></i>
-    </button> -->
+    </button>
   </nav>
 
   <!-- Dashboard Hero Header -->
@@ -1422,9 +1421,31 @@
   var splash = document.getElementById('brandSplash');
   var brandLoading = document.getElementById('brandLoading');
   var locationNav = document.getElementById('locationNav');
-  var splashTimer = setTimeout(function () {
-    if (splash) splash.classList.add('is-hidden');
-  }, 3600);
+
+  // Check if we already have cached data in device local storage for instant launch
+  var hasLocalData = false;
+  try {
+    var raw = localStorage.getItem('laava_vdm_cache_today');
+    if (raw) {
+      var item = JSON.parse(raw);
+      if (item && (item.data || item.ok)) hasLocalData = true;
+    }
+  } catch (e) {}
+
+  var splashTimer = null;
+  if (!hasLocalData) {
+    splashTimer = setTimeout(function () {
+      if (splash) splash.classList.add('is-hidden');
+    }, 2800);
+  } else {
+    // If local storage has data on device, fade out splash immediately with ultra-smooth 100ms fade
+    if (splash) {
+      splash.style.transition = 'opacity 0.2s ease, visibility 0.2s ease';
+      setTimeout(function () {
+        splash.classList.add('is-hidden');
+      }, 100);
+    }
+  }
 
   window.LaavaBrandLoader = {
     show: function () {
@@ -1432,6 +1453,10 @@
     },
     hide: function () {
       if (brandLoading) brandLoading.classList.add('is-hidden');
+    },
+    dismissSplash: function () {
+      if (splashTimer) { clearTimeout(splashTimer); splashTimer = null; }
+      if (splash) splash.classList.add('is-hidden');
     }
   };
 })();
@@ -1463,11 +1488,122 @@
   var lastSummary = null; 
   var dashboardRevealed = false;
 
-  // --- Speed: in-memory cache keyed by range/date. When a filter is
-  // reselected (or auto-refresh ticks) we render the cached numbers
-  // instantly and silently refetch in the background, so the dashboard
-  // never has to sit on a blocking spinner for data it already has.
+  // --- Speed: in-memory cache + device LocalStorage persistent cache.
+  // Both Today and Yesterday are stored locally so switching between them
+  // happens in 0ms (instant retrieval without any loading screen).
+  var CACHE_PREFIX = 'laava_vdm_cache_';
+  var STORAGE_SHOP_TODAY = 'laava_vdm_shop_today';
   var dataCache = {};
+  var currentFetchId = 0;
+  var prefetchDone = false;
+
+  function getDeviceTodayStr() {
+    var now = new Date();
+    var utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    var istDate = new Date(utc + (3600000 * 5.5));
+    return istDate.toISOString().substring(0, 10);
+  }
+
+  function getTodayDateStr() {
+    return shopToday || getStoredShopToday() || getDeviceTodayStr();
+  }
+
+  function getYesterdayDateStr() {
+    return addDaysToDateStr(getTodayDateStr(), -1);
+  }
+
+  function getLocalData(key) {
+    if (!key) return null;
+    if (dataCache[key]) return dataCache[key];
+
+    try {
+      var item = localStorage.getItem(CACHE_PREFIX + key);
+      if (item) {
+        var parsed = JSON.parse(item);
+        if (parsed && (parsed.ok !== false)) {
+          var payload = parsed.data || parsed;
+          dataCache[key] = payload;
+          return payload;
+        }
+      }
+    } catch (e) {}
+
+    // Smart aliases: resolve across today, yesterday, and ISO date keys
+    var tDate = getTodayDateStr();
+    var yDate = getYesterdayDateStr();
+
+    if (key === 'today' && tDate) {
+      var fromDate = getLocalData('date:' + tDate);
+      if (fromDate) { dataCache['today'] = fromDate; return fromDate; }
+    }
+    if (key === 'yesterday' && yDate) {
+      var fromYDate = getLocalData('date:' + yDate);
+      if (fromYDate) { dataCache['yesterday'] = fromYDate; return fromYDate; }
+    }
+    if (tDate && key === ('date:' + tDate)) {
+      var fromToday = getLocalData('today');
+      if (fromToday) return fromToday;
+    }
+    if (yDate && key === ('date:' + yDate)) {
+      var fromYest = getLocalData('yesterday');
+      if (fromYest) return fromYest;
+    }
+
+    return null;
+  }
+
+  function setLocalData(key, data) {
+    if (!data || data.ok === false) return;
+    dataCache[key] = data;
+
+    try {
+      var blob = JSON.stringify({
+        data: data,
+        savedAt: Date.now()
+      });
+      localStorage.setItem(CACHE_PREFIX + key, blob);
+
+      if (data.date) {
+        dataCache['date:' + data.date] = data;
+        localStorage.setItem(CACHE_PREFIX + 'date:' + data.date, blob);
+
+        if (key === 'today') {
+          shopToday = data.date;
+          localStorage.setItem(STORAGE_SHOP_TODAY, data.date);
+        }
+      }
+
+      var yDate = getYesterdayDateStr();
+      if (key === 'yesterday' || (data.date && data.date === yDate)) {
+        dataCache['yesterday'] = data;
+        localStorage.setItem(CACHE_PREFIX + 'yesterday', blob);
+      }
+    } catch (e) {
+      console.warn('LocalStorage save error:', e);
+    }
+  }
+
+  function getStoredShopToday() {
+    try {
+      return localStorage.getItem(STORAGE_SHOP_TODAY) || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function prefetchYesterday() {
+    if (prefetchDone) return;
+    var yDate = getYesterdayDateStr();
+    if (!yDate) return;
+    var fetchUrl = buildQuery({ date: yDate });
+    fetch(fetchUrl).then(function (res) { return res.json(); }).then(function (data) {
+      if (data && data.ok !== false) {
+        prefetchDone = true;
+        setLocalData('yesterday', data);
+        setLocalData('date:' + yDate, data);
+      }
+    }).catch(function () {});
+  }
 
   function getSavedUrl() { return SCRIPT_URL; }
   function getSavedPass() { return OWNER_PASSWORD; }
@@ -1615,7 +1751,7 @@
       document.getElementById('cardSub').textContent = cdBills + ' bills';
     }
 
-    document.getElementById('updatedLabel').textContent = (fromCache ? 'Cached ' : 'Updated ') + new Date().toLocaleTimeString('en-IN');
+    document.getElementById('updatedLabel').textContent = fromCache ? 'Device Storage · Syncing...' : ('Updated ' + new Date().toLocaleTimeString('en-IN'));
 
     var cd = summary.cashDrawer;
     var cashDrawerValEl = document.getElementById('cashDrawerVal');
@@ -1681,7 +1817,10 @@
       wastageSubEl.textContent = 'No wastage recorded for this date yet.';
     }
 
-    if (currentRange === 'today') shopToday = summary.date;
+    if (currentRange === 'today') {
+      shopToday = summary.date;
+      try { localStorage.setItem(STORAGE_SHOP_TODAY, summary.date); } catch (e) {}
+    }
     lastSummary = summary;
 
     errorBox.classList.add('hidden');
@@ -1703,7 +1842,7 @@
     return url + sep + qs;
   }
 
-  function fetchByRange(range, showLoading) {
+  function switchRange(range, forcedDate) {
     var url = getSavedUrl();
     if (!url) { showError('Dashboard service URL is not configured.'); return; }
 
@@ -1711,6 +1850,9 @@
     document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
 
     var fetchUrl, cacheKey;
+    var tDate = getTodayDateStr();
+    var yDate = getYesterdayDateStr();
+
     if (range === 'today') {
       document.getElementById('btnToday').classList.add('active');
       customDateInput.classList.add('hidden');
@@ -1719,53 +1861,67 @@
     } else if (range === 'yesterday') {
       document.getElementById('btnYesterday').classList.add('active');
       customDateInput.classList.add('hidden');
-      if (shopToday) {
-        var yDate = addDaysToDateStr(shopToday, -1);
-        fetchUrl = buildQuery({ date: yDate });
-        cacheKey = 'date:' + yDate;
-      } else {
-        fetch(buildQuery({ action: 'today' })).then(function (res) { return res.json(); }).then(function (data) {
-          if (data && data.ok) {
-            shopToday = data.date;
-            dataCache['today'] = data;
-            fetchByRange('yesterday', showLoading);
-          } else {
-            handleResponse(data);
-          }
-        }).catch(function (err) { showError('Could not connect. (' + err.message + ')'); });
-        return;
-      }
+      fetchUrl = buildQuery({ date: yDate });
+      cacheKey = 'yesterday';
     } else {
       document.getElementById('btnCustom').classList.add('active');
       customDateInput.classList.remove('hidden');
-      var picked = customDateInput.value || (shopToday || new Date().toISOString().substring(0, 10));
+      var picked = forcedDate || customDateInput.value || tDate;
       customDateInput.value = picked;
       fetchUrl = buildQuery({ date: picked });
       cacheKey = 'date:' + picked;
     }
 
-    // Instant paint from cache (stale-while-revalidate) — the numbers the
-    // owner already saw for this filter show immediately, no spinner,
-    // while a fresh copy loads quietly underneath.
-    var cached = dataCache[cacheKey];
+    // --- 1. INSTANT 0ms RENDER FROM LOCAL STORAGE ---
+    var cached = getLocalData(cacheKey);
+    if (!cached && range === 'yesterday') cached = getLocalData('date:' + yDate);
+    if (!cached && range === 'today') cached = getLocalData('date:' + tDate);
+
     if (cached) {
+      // Paint immediately from device storage - ZERO DELAY
       render(cached, true);
-    } else if (showLoading) {
+      if (window.LaavaBrandLoader && window.LaavaBrandLoader.dismissSplash) {
+        window.LaavaBrandLoader.dismissSplash();
+      }
+    } else if (!dashboardRevealed) {
       loadingBox.classList.remove('hidden');
       if (window.LaavaBrandLoader) window.LaavaBrandLoader.show();
+    } else {
+      // If dashboard is already visible, keep current view and update status text softly
+      document.getElementById('updatedLabel').textContent = 'Loading ' + (range === 'today' ? "Today" : (range === 'yesterday' ? "Yesterday" : 'date')) + '...';
     }
 
+    // --- 2. SILENT BACKGROUND SYNC ---
+    var fetchId = ++currentFetchId;
     if (refreshIcon) refreshIcon.classList.add('fa-spin');
-    if (showLoading && window.LaavaBrandLoader) window.LaavaBrandLoader.show();
 
     fetch(fetchUrl).then(function (res) { return res.json(); }).then(function (data) {
-      if (refreshIcon) refreshIcon.classList.remove('fa-spin');
-      if (data && data.ok !== false) { dataCache[cacheKey] = data; }
-      handleResponse(data);
+      if (fetchId === currentFetchId && refreshIcon) refreshIcon.classList.remove('fa-spin');
+      if (data && data.ok !== false) {
+        setLocalData(cacheKey, data);
+        if (range === 'yesterday') {
+          setLocalData('yesterday', data);
+          setLocalData('date:' + yDate, data);
+        } else if (range === 'today') {
+          setLocalData('today', data);
+          setLocalData('date:' + (data.date || tDate), data);
+          prefetchYesterday();
+        }
+      }
+      // ONLY update the screen if the user is STILL viewing this range
+      if (fetchId === currentFetchId && currentRange === range) {
+        handleResponse(data);
+      }
     }).catch(function (err) {
-      if (refreshIcon) refreshIcon.classList.remove('fa-spin');
-      if (!cached) showError('Could not load sales. Check your internet connection, then tap Refresh. (' + err.message + ')');
+      if (fetchId === currentFetchId && refreshIcon) refreshIcon.classList.remove('fa-spin');
+      if (!cached && !dashboardRevealed && fetchId === currentFetchId) {
+        showError('Could not load sales. Check your internet connection, then tap Refresh. (' + err.message + ')');
+      }
     });
+  }
+
+  function fetchByRange(range) {
+    switchRange(range);
   }
 
   function handleResponse(data) {
@@ -1780,18 +1936,30 @@
     render(data, false);
   }
 
-
-  document.getElementById('refreshBtn').addEventListener('click', function () { fetchByRange(currentRange, true); });
-  document.getElementById('btnToday').addEventListener('click', function () { fetchByRange('today', true); });
-  document.getElementById('btnYesterday').addEventListener('click', function () { fetchByRange('yesterday', true); });
-  document.getElementById('btnCustom').addEventListener('click', function () { fetchByRange('custom', true); });
-  customDateInput.addEventListener('change', function () { fetchByRange('custom', true); });
-
-
+  // Smooth, instantaneous click handlers
+  document.getElementById('refreshBtn').addEventListener('click', function () {
+    switchRange(currentRange);
+  });
+  document.getElementById('btnToday').addEventListener('click', function () {
+    switchRange('today');
+  });
+  document.getElementById('btnYesterday').addEventListener('click', function () {
+    switchRange('yesterday');
+  });
+  document.getElementById('btnCustom').addEventListener('click', function () {
+    switchRange('custom');
+  });
+  customDateInput.addEventListener('change', function () {
+    switchRange('custom', customDateInput.value);
+  });
 
   function startAutoRefresh() {
     if (timer) clearInterval(timer);
-    timer = setInterval(function () { fetchByRange(currentRange, false); }, REFRESH_MS);
+    timer = setInterval(function () {
+      if (dashboardRevealed) {
+        switchRange(currentRange);
+      }
+    }, REFRESH_MS);
   }
 
 
@@ -2466,6 +2634,10 @@
     linkLock.addEventListener('click', function (e) {
       e.preventDefault();
       dataCache = {};
+      try {
+        localStorage.removeItem(CACHE_PREFIX + 'today');
+        localStorage.removeItem(CACHE_PREFIX + 'yesterday');
+      } catch (err) {}
       fetchByRange(currentRange, true);
     });
   }
@@ -2481,14 +2653,26 @@
     });
   });
 
-  // Direct-open mode: no username/password screen. If a previously saved
-  // password exists it is sent for backward compatibility; otherwise the
-  // request is sent without credentials.
-  fetchByRange('today', true);
+  // Direct-open mode with instant LocalStorage hydration:
+  // 1. Immediately read stored device data and paint the full dashboard
+  // 2. Dismiss brand splash screen with zero waiting
+  // 3. Silently synchronize with Google Sheets in the background without delay
+  shopToday = getStoredShopToday() || getDeviceTodayStr();
+  var initialCached = getLocalData('today');
+  if (initialCached) {
+    render(initialCached, true);
+    if (window.LaavaBrandLoader && window.LaavaBrandLoader.dismissSplash) {
+      window.LaavaBrandLoader.dismissSplash();
+    }
+    switchRange('today');
+    setTimeout(prefetchYesterday, 100);
+  } else {
+    // First time launch on this device: show initial loader
+    switchRange('today');
+    setTimeout(prefetchYesterday, 800);
+  }
   startAutoRefresh();
 })();
 </script>
-</body>
-</html>
 </body>
 </html>
