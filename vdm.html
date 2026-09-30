@@ -1039,7 +1039,7 @@
   <!-- Top Navigation Bar -->
   <nav class="top-nav" id="locationNav" aria-label="Locations and settings">
     <div class="location-pills">
-      <a class="nav-pill nav-pill-active" href="https://suryacode26.github.io/laava/" aria-label="Srimushnam">
+      <a class="nav-pill nav-pill-white" href="https://suryacode26.github.io/laava/" aria-label="Srimushnam">
         <i class="fa-solid fa-location-dot"></i>
         <span>SRIMUSHNAM</span>
         <i class="fa-solid fa-chevron-down pill-chevron"></i>
@@ -1512,10 +1512,9 @@
     return addDaysToDateStr(getTodayDateStr(), -1);
   }
 
-  function getLocalData(key) {
+  function readRawStorage_(key) {
     if (!key) return null;
     if (dataCache[key]) return dataCache[key];
-
     try {
       var item = localStorage.getItem(CACHE_PREFIX + key);
       if (item) {
@@ -1527,26 +1526,30 @@
         }
       }
     } catch (e) {}
+    return null;
+  }
 
-    // Smart aliases: resolve across today, yesterday, and ISO date keys
+  function getLocalData(key) {
+    if (!key) return null;
+    // 1. Direct storage lookup
+    var direct = readRawStorage_(key);
+    if (direct) return direct;
+
+    // 2. Safe alias lookup without recursion
     var tDate = getTodayDateStr();
     var yDate = getYesterdayDateStr();
 
     if (key === 'today' && tDate) {
-      var fromDate = getLocalData('date:' + tDate);
-      if (fromDate) { dataCache['today'] = fromDate; return fromDate; }
+      return readRawStorage_('date:' + tDate);
     }
     if (key === 'yesterday' && yDate) {
-      var fromYDate = getLocalData('date:' + yDate);
-      if (fromYDate) { dataCache['yesterday'] = fromYDate; return fromYDate; }
+      return readRawStorage_('date:' + yDate);
     }
     if (tDate && key === ('date:' + tDate)) {
-      var fromToday = getLocalData('today');
-      if (fromToday) return fromToday;
+      return readRawStorage_('today');
     }
     if (yDate && key === ('date:' + yDate)) {
-      var fromYest = getLocalData('yesterday');
-      if (fromYest) return fromYest;
+      return readRawStorage_('yesterday');
     }
 
     return null;
